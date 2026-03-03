@@ -1,0 +1,63 @@
+# pycheckem Environment Diff — GitHub Actions Example
+#
+# This workflow snapshots the CI environment and diffs it against a
+# saved baseline.  If differences exceed the configured severity
+# threshold the job fails, making environment drift visible in PRs.
+#
+# Usage:
+#   1. Copy this file into your repository's .github/workflows/ directory.
+#   2. Create an initial baseline:
+#        pip install pycheckem
+#        pycheckem snapshot -o baseline.json --label baseline
+#      and commit baseline.json to the repo (or upload it as an artifact).
+#   3. Adjust --fail-severity to taste (minor | major | critical).
+
+name: pycheckem Environment Diff
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  env-diff:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -e .
+          pip install pycheckem
+
+      - name: Download baseline artifact (if exists)
+        uses: actions/download-artifact@v4
+        with:
+          name: pycheckem-baseline
+          path: .pycheckem/
+        continue-on-error: true
+
+      - name: Snapshot current environment
+        run: pycheckem snapshot -o current.json --label "ci-${{ github.sha }}"
+
+      - name: Diff against baseline
+        if: hashFiles('.pycheckem/baseline.json') != ''
+        run: |
+          pycheckem diff .pycheckem/baseline.json current.json \
+            --format ascii \
+            --exit-code \
+            --fail-severity major
+
+      - name: Upload current snapshot as new baseline
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pycheckem-baseline
+          path: current.json
+          overwrite: true
