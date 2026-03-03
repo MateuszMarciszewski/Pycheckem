@@ -54,6 +54,9 @@ def _section_packages(packages):
     for name, vc in sorted(packages.changed.items()):
         rows.append(("! {} {}".format(name, vc.version_a),
                       "! {} {}".format(name, vc.version_b)))
+    for name, sc in sorted(getattr(packages, "source_changed", {}).items()):
+        rows.append(("! {} [{}]".format(name, sc.source_a),
+                      "! {} [{}]".format(name, sc.source_b)))
     return rows
 
 

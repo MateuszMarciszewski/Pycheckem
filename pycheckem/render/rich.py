@@ -47,7 +47,9 @@ def _section_python(python):
 
 def _section_packages(packages):
     # type: (PackageDiff) -> Optional[Table]
-    total = len(packages.added) + len(packages.removed) + len(packages.changed)
+    source_changed = getattr(packages, "source_changed", {})
+    total = (len(packages.added) + len(packages.removed)
+             + len(packages.changed) + len(source_changed))
     if total == 0:
         return None
     n = "difference" if total == 1 else "differences"
@@ -71,7 +73,12 @@ def _section_packages(packages):
             note = "MAJOR VERSION CHANGE"
         elif vc.is_downgrade:
             note = "DOWNGRADE"
-        table.add_row("[yellow]~[/yellow]", name, ver_str, note)
+        if getattr(vc, "source_a", "pypi") != getattr(vc, "source_b", "pypi"):
+            note += " [{}]\u2192[{}]".format(vc.source_a, vc.source_b)
+        table.add_row("[yellow]~[/yellow]", name, ver_str, note.strip())
+    for name, sc in sorted(source_changed.items()):
+        src_str = "[{}] \u2192 [{}]".format(sc.source_a, sc.source_b)
+        table.add_row("[yellow]~[/yellow]", name, src_str, "SOURCE CHANGED")
     return table
 
 

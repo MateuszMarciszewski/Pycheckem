@@ -31,6 +31,9 @@ class PackageInfo:
     version: str
     location: Optional[str]  # install path
     requires: List[str]  # direct dependencies
+    install_source: str = "pypi"  # "pypi", "editable", "local", "vcs", "archive"
+    source_url: Optional[str] = None  # URL from direct_url.json
+    source_detail: Optional[str] = None  # VCS commit hash, editable path, etc.
 
 
 @dataclass
@@ -86,6 +89,18 @@ class VersionChange:
     version_b: str
     is_major: bool
     is_downgrade: bool
+    source_a: str = "pypi"
+    source_b: str = "pypi"
+
+
+@dataclass
+class SourceChange:
+    source_a: str
+    source_b: str
+    url_a: Optional[str]
+    url_b: Optional[str]
+    detail_a: Optional[str]
+    detail_b: Optional[str]
 
 
 @dataclass
@@ -94,6 +109,7 @@ class PackageDiff:
     removed: Dict[str, str]  # pkg -> version (in A, not B)
     changed: Dict[str, VersionChange]  # pkg -> change details
     unchanged_count: int
+    source_changed: Dict[str, SourceChange] = field(default_factory=dict)
 
 
 @dataclass

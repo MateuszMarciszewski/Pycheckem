@@ -61,16 +61,23 @@ def _filter_packages(pkg_diff, config):
         k: v for k, v in pkg_diff.changed.items()
         if not _should_suppress_package(k, config)
     }
+    orig_source_changed = getattr(pkg_diff, "source_changed", {})
+    source_changed = {
+        k: v for k, v in orig_source_changed.items()
+        if not _should_suppress_package(k, config)
+    }
     suppressed_count = (
         (len(pkg_diff.added) - len(added))
         + (len(pkg_diff.removed) - len(removed))
         + (len(pkg_diff.changed) - len(changed))
+        + (len(orig_source_changed) - len(source_changed))
     )
     return PackageDiff(
         added=added,
         removed=removed,
         changed=changed,
         unchanged_count=pkg_diff.unchanged_count + suppressed_count,
+        source_changed=source_changed,
     )
 
 
@@ -117,13 +124,14 @@ def apply_suppression(result, config):
     env_vars = _filter_env_vars(result.env_vars, config)
 
     # Recompute severity and counts with filtered data
+    project = getattr(result, "project", None)
     total = count_differences(
         result.python, packages, env_vars,
-        result.os_info, result.paths, result.config_files,
+        result.os_info, result.paths, result.config_files, project,
     )
     severity, breaking = compute_severity(
         result.python, packages, env_vars,
-        result.os_info, result.paths, result.config_files,
+        result.os_info, result.paths, result.config_files, project,
     )
 
     return DiffResult(
@@ -135,6 +143,7 @@ def apply_suppression(result, config):
         os_info=result.os_info,
         paths=result.paths,
         config_files=result.config_files,
+        project=project,
         summary=DiffSummary(
             total_differences=total,
             severity=severity,

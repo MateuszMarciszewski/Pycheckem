@@ -19,6 +19,7 @@ from pycheckem.types import (
     PythonDiff,
     PythonInfo,
     Snapshot,
+    SourceChange,
     VarDiff,
     VersionChange,
 )
@@ -85,14 +86,32 @@ def diff_packages(a, b):
     removed = {name: a[name].version for name in sorted(keys_a - keys_b)}
 
     changed = {}  # type: Dict[str, VersionChange]
+    source_changed = {}  # type: Dict[str, SourceChange]
     unchanged_count = 0
     for name in sorted(keys_a & keys_b):
-        if a[name].version != b[name].version:
+        pkg_a = a[name]
+        pkg_b = b[name]
+
+        src_a = getattr(pkg_a, "install_source", "pypi")
+        src_b = getattr(pkg_b, "install_source", "pypi")
+
+        if pkg_a.version != pkg_b.version:
             changed[name] = VersionChange(
-                version_a=a[name].version,
-                version_b=b[name].version,
-                is_major=is_major_change(a[name].version, b[name].version),
-                is_downgrade=is_downgrade(a[name].version, b[name].version),
+                version_a=pkg_a.version,
+                version_b=pkg_b.version,
+                is_major=is_major_change(pkg_a.version, pkg_b.version),
+                is_downgrade=is_downgrade(pkg_a.version, pkg_b.version),
+                source_a=src_a,
+                source_b=src_b,
+            )
+        elif src_a != src_b:
+            source_changed[name] = SourceChange(
+                source_a=src_a,
+                source_b=src_b,
+                url_a=getattr(pkg_a, "source_url", None),
+                url_b=getattr(pkg_b, "source_url", None),
+                detail_a=getattr(pkg_a, "source_detail", None),
+                detail_b=getattr(pkg_b, "source_detail", None),
             )
         else:
             unchanged_count += 1
@@ -102,6 +121,7 @@ def diff_packages(a, b):
         removed=removed,
         changed=changed,
         unchanged_count=unchanged_count,
+        source_changed=source_changed,
     )
 
 
@@ -338,6 +358,9 @@ def compute_severity(
     if pkg_diff.added:
         raise_to("minor")
 
+    if pkg_diff.source_changed:
+        raise_to("minor")
+
     # --- Env vars ---
     if env_diff.removed or env_diff.changed:
         raise_to("minor")
@@ -384,7 +407,8 @@ def count_differences(
     if python_diff is not None:
         count += len(python_diff.changes)
 
-    count += len(pkg_diff.added) + len(pkg_diff.removed) + len(pkg_diff.changed)
+    count += (len(pkg_diff.added) + len(pkg_diff.removed)
+              + len(pkg_diff.changed) + len(pkg_diff.source_changed))
     count += len(env_diff.added) + len(env_diff.removed) + len(env_diff.changed)
 
     if os_diff is not None:
