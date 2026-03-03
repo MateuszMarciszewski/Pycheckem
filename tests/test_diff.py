@@ -447,3 +447,57 @@ class TestDiffProject:
         result = diff(a, b)
         # 2 deps added
         assert result.summary.total_differences == 2
+
+
+class TestDiffPackageSources:
+    def test_same_version_different_source(self):
+        a = {"mylib": PackageInfo("1.0.0", "/sp", [], install_source="editable",
+                                   source_url="file:///dev/mylib")}
+        b = {"mylib": PackageInfo("1.0.0", "/sp", [], install_source="pypi")}
+        result = diff_packages(a, b)
+        assert result.changed == {}
+        assert "mylib" in result.source_changed
+        assert result.source_changed["mylib"].source_a == "editable"
+        assert result.source_changed["mylib"].source_b == "pypi"
+
+    def test_same_version_same_source_unchanged(self):
+        a = {"mylib": PackageInfo("1.0.0", "/sp", [], install_source="pypi")}
+        b = {"mylib": PackageInfo("1.0.0", "/sp", [], install_source="pypi")}
+        result = diff_packages(a, b)
+        assert result.source_changed == {}
+        assert result.unchanged_count == 1
+
+    def test_version_change_carries_source(self):
+        a = {"mylib": PackageInfo("1.0.0", "/sp", [], install_source="editable")}
+        b = {"mylib": PackageInfo("2.0.0", "/sp", [], install_source="pypi")}
+        result = diff_packages(a, b)
+        assert "mylib" in result.changed
+        assert result.changed["mylib"].source_a == "editable"
+        assert result.changed["mylib"].source_b == "pypi"
+        assert result.source_changed == {}
+
+    def test_source_change_minor_severity(self):
+        a = _make_snapshot(packages={
+            "mylib": PackageInfo("1.0.0", "/sp", [], install_source="editable"),
+        })
+        b = _make_snapshot(packages={
+            "mylib": PackageInfo("1.0.0", "/sp", [], install_source="pypi"),
+        })
+        result = diff(a, b)
+        assert result.summary.severity == "minor"
+
+    def test_source_change_counted(self):
+        a = _make_snapshot(packages={
+            "mylib": PackageInfo("1.0.0", "/sp", [], install_source="editable"),
+        })
+        b = _make_snapshot(packages={
+            "mylib": PackageInfo("1.0.0", "/sp", [], install_source="pypi"),
+        })
+        result = diff(a, b)
+        assert result.summary.total_differences == 1
+
+    def test_old_packageinfo_defaults(self):
+        old = PackageInfo("1.0.0", "/sp", [])
+        assert old.install_source == "pypi"
+        assert old.source_url is None
+        assert old.source_detail is None

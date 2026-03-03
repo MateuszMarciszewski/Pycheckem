@@ -236,3 +236,29 @@ class TestSaveLoad:
         loaded = load(path)
         assert loaded.project is None
         assert loaded.plugins == {}
+
+    def test_load_old_snapshot_without_source_fields(self, tmp_path):
+        """Old snapshots lacking install_source fields load with defaults."""
+        snap = snapshot()
+        snap_dict = dataclasses.asdict(snap)
+        for pkg_data in snap_dict["packages"].values():
+            pkg_data.pop("install_source", None)
+            pkg_data.pop("source_url", None)
+            pkg_data.pop("source_detail", None)
+        path = str(tmp_path / "old_snap.json")
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(snap_dict, f, indent=2)
+        loaded = load(path)
+        for pkg in loaded.packages.values():
+            assert pkg.install_source == "pypi"
+            assert pkg.source_url is None
+            assert pkg.source_detail is None
+
+    def test_roundtrip_preserves_source_fields(self, tmp_path):
+        """Source fields survive save/load roundtrip."""
+        snap = snapshot(label="source-test")
+        path = str(tmp_path / "snap.json")
+        save(snap, path)
+        loaded = load(path)
+        for name, pkg in snap.packages.items():
+            assert loaded.packages[name].install_source == pkg.install_source

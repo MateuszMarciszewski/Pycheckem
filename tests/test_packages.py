@@ -1,6 +1,7 @@
+import json
 from unittest.mock import MagicMock, patch
 
-from pycheckem.collectors.packages import collect_packages
+from pycheckem.collectors.packages import _parse_install_source, collect_packages
 from pycheckem.types import PackageInfo
 
 
@@ -19,6 +20,8 @@ def _make_mock_dist(name, version, requires=None, has_files=True):
         dist.files = [mock_file]
     else:
         dist.files = None
+
+    dist.read_text = MagicMock(return_value=None)
 
     return dist
 
@@ -82,3 +85,83 @@ class TestCollectPackages:
     def test_real_packages_includes_pip(self):
         result = collect_packages()
         assert "pip" in result or "setuptools" in result
+
+    @patch("pycheckem.collectors.packages.distributions")
+    def test_editable_package_source(self, mock_dists):
+        dist = _make_mock_dist("mylib", "1.0.0")
+        dist.read_text.return_value = json.dumps({
+            "url": "file:///home/dev/mylib",
+            "dir_info": {"editable": True},
+        })
+        mock_dists.return_value = [dist]
+        result = collect_packages()
+        assert result["mylib"].install_source == "editable"
+        assert result["mylib"].source_url == "file:///home/dev/mylib"
+
+    @patch("pycheckem.collectors.packages.distributions")
+    def test_pypi_package_source(self, mock_dists):
+        mock_dists.return_value = [_make_mock_dist("requests", "2.31.0")]
+        result = collect_packages()
+        assert result["requests"].install_source == "pypi"
+        assert result["requests"].source_url is None
+
+
+class TestParseInstallSource:
+    def test_no_direct_url_returns_pypi(self):
+        dist = MagicMock()
+        dist.read_text.return_value = None
+        assert _parse_install_source(dist) == ("pypi", None, None)
+
+    def test_editable_install(self):
+        dist = MagicMock()
+        dist.read_text.return_value = json.dumps({
+            "url": "file:///home/dev/mylib",
+            "dir_info": {"editable": True},
+        })
+        source, url, detail = _parse_install_source(dist)
+        assert source == "editable"
+        assert url == "file:///home/dev/mylib"
+        assert detail == "file:///home/dev/mylib"
+
+    def test_local_directory_install(self):
+        dist = MagicMock()
+        dist.read_text.return_value = json.dumps({
+            "url": "file:///tmp/mylib",
+            "dir_info": {},
+        })
+        source, url, detail = _parse_install_source(dist)
+        assert source == "local"
+        assert url == "file:///tmp/mylib"
+        assert detail is None
+
+    def test_vcs_git_install(self):
+        dist = MagicMock()
+        dist.read_text.return_value = json.dumps({
+            "url": "https://github.com/user/repo",
+            "vcs_info": {"vcs": "git", "commit_id": "abc123"},
+        })
+        source, url, detail = _parse_install_source(dist)
+        assert source == "vcs"
+        assert url == "https://github.com/user/repo"
+        assert detail == "git@abc123"
+
+    def test_archive_install(self):
+        dist = MagicMock()
+        dist.read_text.return_value = json.dumps({
+            "url": "https://files.pythonhosted.org/packages/mylib-1.0.0.whl",
+            "archive_info": {"hash": "sha256=abc"},
+        })
+        source, url, detail = _parse_install_source(dist)
+        assert source == "archive"
+        assert url == "https://files.pythonhosted.org/packages/mylib-1.0.0.whl"
+        assert detail is None
+
+    def test_read_text_exception(self):
+        dist = MagicMock()
+        dist.read_text.side_effect = Exception("no such file")
+        assert _parse_install_source(dist) == ("pypi", None, None)
+
+    def test_invalid_json(self):
+        dist = MagicMock()
+        dist.read_text.return_value = "not valid json"
+        assert _parse_install_source(dist) == ("pypi", None, None)

@@ -11,6 +11,7 @@ from pycheckem.types import (
     PathDiff,
     ProjectDiff,
     PythonDiff,
+    SourceChange,
     VarDiff,
     VersionChange,
 )
@@ -239,3 +240,20 @@ class TestSideBySideSummary:
         )
         output = render_side_by_side(result, width=80)
         assert "2 differences" in output
+
+
+class TestSbsSourceChanges:
+    def test_source_change_rendered(self):
+        sc = SourceChange(
+            source_a="editable", source_b="pypi",
+            url_a="file:///dev/mylib", url_b=None,
+            detail_a="file:///dev/mylib", detail_b=None,
+        )
+        result = _make_result(
+            packages=PackageDiff({}, {}, {}, 0, source_changed={"mylib": sc}),
+            summary=DiffSummary(1, "minor", []),
+        )
+        output = render_side_by_side(result, width=80)
+        assert "[editable]" in output
+        assert "[pypi]" in output
+        assert "mylib" in output

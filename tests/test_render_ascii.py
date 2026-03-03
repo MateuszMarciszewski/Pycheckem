@@ -230,3 +230,33 @@ class TestRenderAsciiOnly:
         output = render_ascii(result, only="env")
         assert "Environment Variables" in output
         assert "Packages" not in output
+
+
+class TestAsciiSourceChanges:
+    def test_source_change_rendered(self):
+        a = _make_snapshot(packages={
+            "mylib": PackageInfo("1.0.0", "/sp", [], install_source="editable",
+                                  source_url="file:///dev/mylib",
+                                  source_detail="file:///dev/mylib"),
+        })
+        b = _make_snapshot(packages={
+            "mylib": PackageInfo("1.0.0", "/sp", [], install_source="pypi"),
+        })
+        result = diff(a, b)
+        output = render_ascii(result)
+        assert "[editable]" in output
+        assert "[pypi]" in output
+        assert "mylib" in output
+
+    def test_version_change_with_source_shows_source(self):
+        a = _make_snapshot(packages={
+            "mylib": PackageInfo("1.0.0", "/sp", [], install_source="editable"),
+        })
+        b = _make_snapshot(packages={
+            "mylib": PackageInfo("2.0.0", "/sp", [], install_source="pypi"),
+        })
+        result = diff(a, b)
+        output = render_ascii(result)
+        assert "[editable]" in output
+        assert "[pypi]" in output
+        assert "\u2192" in output

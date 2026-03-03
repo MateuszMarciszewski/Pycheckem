@@ -85,7 +85,7 @@ pycheckem snapshot -o <output_file> [options]
 What gets captured:
 
 - **Python** — version, implementation, executable, prefix, platform
-- **Packages** — all installed packages with versions, locations, dependencies
+- **Packages** — all installed packages with versions, locations, dependencies, and install source (PyPI, editable, local, VCS, archive via PEP 610)
 - **Environment variables** — filtered by default to exclude secrets
 - **OS** — system, kernel, architecture, distro
 - **Paths** — `sys.path` and `$PATH`
@@ -251,7 +251,7 @@ The `Snapshot` object contains:
 |-------|------|-------------|
 | `metadata` | `SnapshotMetadata` | Timestamp, hostname, label, pycheckem version |
 | `python` | `PythonInfo` | Version, implementation, executable, prefix, platform |
-| `packages` | `dict[str, PackageInfo]` | Installed packages with versions and dependencies |
+| `packages` | `dict[str, PackageInfo]` | Installed packages with versions, dependencies, and install source |
 | `env_vars` | `dict[str, str]` | Environment variables (sensitive filtered by default) |
 | `os_info` | `OSInfo` | System, release, machine, distro |
 | `paths` | `PathInfo` | `sys.path` and `$PATH` entries |
@@ -264,7 +264,7 @@ The `Snapshot` object contains:
 | Severity | Triggers |
 |----------|----------|
 | `identical` | No differences |
-| `minor` | Added packages, env var changes, path changes, config changes, project metadata changes |
+| `minor` | Added packages, env var changes, path changes, config changes, project metadata changes, install source changes |
 | `major` | Python minor version mismatch, package downgrades, removed packages, `requires-python` change |
 | `critical` | Python major version change, OS/architecture mismatch, package major version change |
 
