@@ -207,9 +207,23 @@ def _section_project(project):
 
 def render_rich(result, only=None):
     # type: (DiffResult, Optional[str]) -> str
-    """Render a DiffResult using rich for color-coded terminal output.
+    """Render a DiffResult with color-coded tables using the rich library.
 
-    Falls back to ASCII rendering if rich is not installed.
+    Produces visually rich output with colored severity indicators,
+    styled tables, and panels. Requires ``pip install pycheckem[pretty]``.
+    Falls back to plain ASCII rendering if rich is not installed.
+
+    Args:
+        result: The DiffResult to render.
+        only: If set, render just one section ("packages", "env", "python",
+            "os", "paths", "config", "project").
+
+    Returns:
+        A string with ANSI color codes (or plain ASCII if rich is missing).
+
+    Example:
+        >>> from pycheckem.render import rich
+        >>> print(rich(result))
     """
     if not _RICH_AVAILABLE:
         from pycheckem.render.ascii import render_ascii

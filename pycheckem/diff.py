@@ -437,7 +437,31 @@ def count_differences(
 
 def diff(a, b):
     # type: (Snapshot, Snapshot) -> DiffResult
-    """Compare two Snapshots and produce a structured DiffResult."""
+    """Compare two environment snapshots and return a structured diff.
+
+    Compares every section -- Python version, packages, environment variables,
+    OS, paths, config files, and project metadata -- and produces a DiffResult
+    with severity scoring and breaking change detection.
+
+    Args:
+        a: The first (baseline) snapshot.
+        b: The second (target) snapshot.
+
+    Returns:
+        A DiffResult with per-section diffs, a summary with severity
+        ("identical", "minor", "major", "critical"), total difference
+        count, and a list of breaking changes.
+
+    Example:
+        >>> import pycheckem
+        >>> staging = pycheckem.load("staging.json")
+        >>> prod = pycheckem.load("prod.json")
+        >>> result = pycheckem.diff(staging, prod)
+        >>> result.summary.severity
+        'major'
+        >>> result.summary.total_differences
+        5
+    """
     python = diff_python(a.python, b.python)
     packages = diff_packages(a.packages, b.packages)
     env_vars = diff_env_vars(a.env_vars, b.env_vars)

@@ -133,10 +133,24 @@ def _section_project(project):
 
 def render_side_by_side(result, only=None, width=None):
     # type: (DiffResult, Optional[str], Optional[int]) -> str
-    """Render a DiffResult as side-by-side comparison.
+    """Render a DiffResult as a two-column side-by-side comparison.
 
-    Two columns showing the left (A) and right (B) environments,
-    with a ``|`` separator.
+    Shows the left (A) and right (B) environments in parallel columns
+    separated by a ``|`` divider, making it easy to visually scan
+    for differences.
+
+    Args:
+        result: The DiffResult to render.
+        only: If set, render just one section ("packages", "env", "python",
+            "os", "paths", "config", "project").
+        width: Terminal width in columns. Auto-detected if not provided.
+
+    Returns:
+        A multi-line string ready to print.
+
+    Example:
+        >>> from pycheckem.render import side_by_side
+        >>> print(side_by_side(result))
     """
     if width is None:
         width = _get_terminal_width()

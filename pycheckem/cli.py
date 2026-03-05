@@ -133,6 +133,54 @@ def main(argv=None):
         help="Comma-separated regex patterns to ignore in diff",
     )
 
+    # guard subcommand
+    guard_parser = subparsers.add_parser(
+        "guard",
+        help="Check if current env matches a baseline (CI gate)",
+    )
+    guard_parser.add_argument("baseline", help="Baseline snapshot file to guard against")
+    guard_parser.add_argument(
+        "--format",
+        choices=["ascii", "json", "rich", "side-by-side", "sbs"],
+        default="ascii",
+        help="Output format (default: ascii)",
+    )
+    guard_parser.add_argument(
+        "--only",
+        choices=["packages", "env", "python", "os", "paths", "config", "project"],
+        default=None,
+        help="Only show a specific section",
+    )
+    guard_parser.add_argument(
+        "--fail-severity",
+        choices=["minor", "major", "critical"],
+        default="minor",
+        help="Minimum severity to trigger failure (default: minor)",
+    )
+    guard_parser.add_argument(
+        "--label", default=None, help="Label for the live snapshot",
+    )
+    guard_parser.add_argument(
+        "--config-files", nargs="*", default=[], help="Config files to hash",
+    )
+    guard_parser.add_argument(
+        "--include-sensitive",
+        action="store_true",
+        help="Include sensitive environment variables",
+    )
+    guard_parser.add_argument(
+        "--ignore-packages", default=None,
+        help="Comma-separated packages to ignore in diff",
+    )
+    guard_parser.add_argument(
+        "--ignore-env-vars", default=None,
+        help="Comma-separated env vars to ignore in diff",
+    )
+    guard_parser.add_argument(
+        "--ignore-patterns", default=None,
+        help="Comma-separated regex patterns to ignore in diff",
+    )
+
     # history subcommand
     history_parser = subparsers.add_parser(
         "history", help="Manage snapshot history"
@@ -311,6 +359,25 @@ def main(argv=None):
             sys.exit(1)
 
         result = _diff_and_render(saved, live, args)
+
+    elif args.command == "guard":
+        from pycheckem.snapshot import snapshot as take_snapshot, load
+
+        baseline = _load_snapshot(args.baseline)
+
+        try:
+            live = take_snapshot(
+                label=args.label,
+                config_files=args.config_files if args.config_files else None,
+                include_sensitive=args.include_sensitive,
+            )
+        except Exception as exc:
+            print(f"Error creating snapshot: {exc}", file=sys.stderr)
+            sys.exit(1)
+
+        # Guard always uses exit_code=True
+        args.exit_code = True
+        result = _diff_and_render(baseline, live, args)
 
     elif args.command == "history":
         from pycheckem.history import add as hist_add, list_snapshots, get_last_n
