@@ -168,10 +168,22 @@ def _section_project(project):
 
 def render_ascii(result, only=None):
     # type: (DiffResult, Optional[str]) -> str
-    """Render a DiffResult as terminal-friendly ASCII text.
+    """Render a DiffResult as terminal-friendly plain text for the console.
 
-    If *only* is set, render just that section (packages, env, python, os,
-    paths, config).
+    This is the default output format. It uses unicode box-drawing characters
+    and symbols (+, -, ~) to show differences clearly in any terminal.
+
+    Args:
+        result: The DiffResult to render.
+        only: If set, render just one section ("packages", "env", "python",
+            "os", "paths", "config", "project").
+
+    Returns:
+        A multi-line string ready to print.
+
+    Example:
+        >>> from pycheckem.render import ascii
+        >>> print(ascii(result))
     """
     if result.summary.severity == "identical" and only is None:
         return "pycheckem: {} vs {}\nNo differences found.".format(

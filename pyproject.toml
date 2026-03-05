@@ -12,9 +12,31 @@ requires-python = ">=3.8"
 authors = [
     { name = "marci" },
 ]
+keywords = [
+    "environment",
+    "parity",
+    "dependency",
+    "compare",
+    "diff",
+    "snapshot",
+    "drift",
+    "requirements",
+    "devops",
+    "ci",
+    "deployment",
+    "validation",
+    "packages",
+    "versions",
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Testing",
+    "Topic :: System :: Systems Administration",
+    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
@@ -22,8 +44,9 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "Topic :: Software Development :: Testing",
-    "Topic :: System :: Systems Administration",
+    "Environment :: Console",
+    "Operating System :: OS Independent",
+    "Typing :: Typed",
 ]
 
 [project.optional-dependencies]
@@ -36,8 +59,10 @@ pycheckem = "pycheckem.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/MateuszMarciszewski/Pycheckem"
+Documentation = "https://github.com/MateuszMarciszewski/Pycheckem#readme"
 Repository = "https://github.com/MateuszMarciszewski/Pycheckem"
-Issues = "https://github.com/MateuszMarciszewski/Pycheckem/issues"
+Changelog = "https://github.com/MateuszMarciszewski/Pycheckem/blob/main/CHANGELOG.md"
+"Bug Tracker" = "https://github.com/MateuszMarciszewski/Pycheckem/issues"
 
 [tool.setuptools.packages.find]
 include = ["pycheckem*"]

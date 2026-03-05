@@ -8,6 +8,21 @@ from pycheckem.types import DiffResult
 
 def render_json(result):
     # type: (DiffResult) -> str
-    """Serialize a DiffResult to pretty-printed JSON."""
+    """Render a DiffResult as pretty-printed JSON for scripts and CI pipelines.
+
+    Args:
+        result: The DiffResult to serialize.
+
+    Returns:
+        A JSON string with 2-space indentation.
+
+    Example:
+        >>> from pycheckem.render import json
+        >>> output = json(result)
+        >>> import json as _json
+        >>> data = _json.loads(output)
+        >>> data["summary"]["severity"]
+        'major'
+    """
     data = dataclasses.asdict(result)
     return _json.dumps(data, indent=2, ensure_ascii=False)

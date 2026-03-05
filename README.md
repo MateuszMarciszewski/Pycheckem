@@ -1,36 +1,21 @@
+[![PyPI version](https://img.shields.io/pypi/v/pycheckem)](https://pypi.org/project/pycheckem/)
+[![Python versions](https://img.shields.io/pypi/pyversions/pycheckem)](https://pypi.org/project/pycheckem/)
+[![License](https://img.shields.io/pypi/l/pycheckem)](LICENSE)
+[![CI](https://github.com/MateuszMarciszewski/Pycheckem/actions/workflows/ci.yml/badge.svg)](https://github.com/MateuszMarciszewski/Pycheckem/actions)
+
 # pycheckem
 
-Snapshot and diff Python runtime environments to debug "works on my machine" parity issues across dev, staging, prod, and containers.
+Your deployment failed because staging has `numpy 1.26.4` but production has `numpy 1.24.3`. You spent two hours figuring this out. pycheckem would have told you in one command.
+
+pycheckem snapshots Python runtime environments — packages, versions, install sources, environment variables, OS details, paths, config files — and produces structured diffs that show you exactly what's different between any two environments. Use it to debug "works on my machine" issues, validate CI/CD environments, or catch drift before it causes production incidents.
 
 **Zero external dependencies.** Everything uses the Python standard library.
 
-## Install
+## Quick Start
 
 ```bash
 pip install pycheckem
 ```
-
-For color-coded terminal output (optional):
-
-```bash
-pip install pycheckem[pretty]
-```
-
-For TOML config support on Python < 3.11 (optional):
-
-```bash
-pip install pycheckem[toml]
-```
-
-For development:
-
-```bash
-git clone https://github.com/MateuszMarciszewski/Pycheckem.git
-cd pycheckem
-pip install -e ".[dev]"
-```
-
-## Quick Start
 
 Capture a snapshot on each machine, then diff them:
 
@@ -38,7 +23,7 @@ Capture a snapshot on each machine, then diff them:
 # On staging
 pycheckem snapshot -o staging.json --label staging
 
-# On prod
+# On production
 pycheckem snapshot -o prod.json --label prod
 
 # Compare
@@ -65,6 +50,50 @@ Summary: 5 differences | Severity: MAJOR
 Breaking: Package downgrade: requests 2.31.0 -> 2.28.0
 ```
 
+Or compare your local environment against a saved snapshot in one step:
+
+```bash
+pycheckem compare prod.json
+```
+
+## Why Not Just `diff <(pip freeze)`?
+
+| Capability | `pip freeze` diff | pycheckem |
+|---|---|---|
+| Package version mismatches | String diff only | Semantic version comparison with severity |
+| Install source detection | No | Yes — PyPI, editable, local, VCS, archive (PEP 610) |
+| Environment variables | Not captured | Captured and diffed (secrets filtered) |
+| Python version, OS, architecture | Not captured | Captured and diffed |
+| Config file changes | Not captured | SHA-256 hash + key inventory |
+| Severity classification | No | Identical / minor / major / critical |
+| CI gating | Manual scripting | Built-in `--exit-code --fail-severity` |
+| Machine-readable output | No | JSON, side-by-side, rich (color-coded) |
+| sys.path and PATH comparison | No | Yes |
+
+## When to Use pycheckem
+
+- **Debugging "works on my machine"** — compare your local environment against staging or prod to find the exact mismatch
+- **CI environment validation** — diff CI against a baseline, fail the build if packages drifted
+- **Pre-deployment checks** — compare the target environment against expectations before deploying
+- **Migration validation** — after moving to a new server, container, or Python version, verify the environment matches
+- **Audit trail** — snapshot environments over time and diff any two points in history
+- **Remote debugging** — snapshot a remote host via SSH and diff against local
+
+## What Gets Captured
+
+Each snapshot records:
+
+| Section | Details |
+|---------|---------|
+| **Python** | Version, implementation, executable, prefix, platform |
+| **Packages** | All installed packages with versions, locations, dependencies, and install source (PEP 610) |
+| **Environment Variables** | All env vars (sensitive values like passwords and keys are filtered by default) |
+| **OS** | System, kernel, architecture, distro |
+| **Paths** | `sys.path` and `$PATH` entries |
+| **Config Files** | SHA-256 hash and top-level key inventory for any files you specify |
+| **Project** | Name, version, dependencies from `pyproject.toml` / `setup.cfg` |
+| **Plugins** | Data from any registered pycheckem collector plugins |
+
 ## CLI Reference
 
 ### `pycheckem snapshot`
@@ -82,17 +111,6 @@ pycheckem snapshot -o <output_file> [options]
 | `--config-files` | Config files to hash (e.g. `.env`, `setup.cfg`) |
 | `--include-sensitive` | Include sensitive env vars (passwords, tokens, keys) |
 
-What gets captured:
-
-- **Python** — version, implementation, executable, prefix, platform
-- **Packages** — all installed packages with versions, locations, dependencies, and install source (PyPI, editable, local, VCS, archive via PEP 610)
-- **Environment variables** — filtered by default to exclude secrets
-- **OS** — system, kernel, architecture, distro
-- **Paths** — `sys.path` and `$PATH`
-- **Config files** — SHA-256 hash and top-level key inventory
-- **Project metadata** — name, version, dependencies from `pyproject.toml` / `setup.cfg`
-- **Plugins** — data from any registered pycheckem collector plugins
-
 ### `pycheckem diff`
 
 Compare two snapshot files.
@@ -103,7 +121,7 @@ pycheckem diff <snapshot_a> <snapshot_b> [options]
 
 | Flag | Description |
 |------|-------------|
-| `--format` | Output format: `ascii` (default), `json`, `rich`, `side-by-side` / `sbs` |
+| `--format` | Output format: `ascii` (default), `json`, `rich`, `sbs` (side-by-side) |
 | `--only` | Show only one section: `packages`, `env`, `python`, `os`, `paths`, `config`, `project` |
 | `--exit-code` | Exit with code 1 if differences meet the severity threshold |
 | `--fail-severity` | Minimum severity to trigger failure: `minor` (default), `major`, `critical` |
@@ -113,13 +131,13 @@ pycheckem diff <snapshot_a> <snapshot_b> [options]
 
 ### `pycheckem compare`
 
-Snapshot the current environment and diff against a saved snapshot in one step:
+Snapshot the current environment and diff against a saved snapshot in one step.
 
 ```bash
 pycheckem compare <saved_snapshot> [options]
 ```
 
-Supports all `diff` flags plus snapshot options (`--label`, `--config-files`, `--include-sensitive`).
+Supports all `diff` flags plus snapshot options.
 
 ```bash
 # Quick check: does my local env match prod?
@@ -131,42 +149,30 @@ pycheckem compare baseline.json --exit-code --fail-severity major
 
 ### `pycheckem history`
 
-Track environment snapshots over time:
+Track environment snapshots over time.
 
 ```bash
-# Add a snapshot to the history store
-pycheckem history add snapshot.json
-
-# List all snapshots in history
-pycheckem history show
-
-# Diff the last 2 snapshots in history
-pycheckem history diff --last 2
-
-# Diff with format and suppression options
-pycheckem history diff --last 2 --format rich --ignore-packages pip,wheel
+pycheckem history add snapshot.json          # Add to history
+pycheckem history show                       # List all snapshots
+pycheckem history diff --last 2              # Diff the last 2 snapshots
+pycheckem history diff --last 2 --format rich  # With formatting options
 ```
 
-History is stored in `.pycheckem/history/` with timestamped filenames. Use `--dir` to set a custom base directory.
+History is stored in `.pycheckem/history/` with timestamped filenames.
 
 ### `pycheckem remote`
 
-Snapshot remote hosts via SSH and diff:
+Snapshot remote hosts via SSH and diff.
 
 ```bash
-# Diff remote host against local environment
-pycheckem remote user@prod-server
-
-# Diff two remote hosts against each other
-pycheckem remote user@staging user@prod
-
-# With options
-pycheckem remote user@host --timeout 60 --format rich --ignore-packages pip
+pycheckem remote user@prod-server                # Diff remote vs local
+pycheckem remote user@staging user@prod          # Diff two remotes
+pycheckem remote user@host --timeout 60 --format rich
 ```
 
-Requires `pycheckem` to be installed on the remote host and `ssh` to be available locally.
+Requires `pycheckem` to be installed on the remote host and `ssh` available locally.
 
-### CI Gating
+## CI Gating
 
 Use `--exit-code` and `--fail-severity` to gate CI pipelines:
 
@@ -174,14 +180,23 @@ Use `--exit-code` and `--fail-severity` to gate CI pipelines:
 # Fail on any difference
 pycheckem diff staging.json prod.json --exit-code
 
-# Fail only on major or critical (ignore minor additions)
+# Fail only on major or critical
 pycheckem diff staging.json prod.json --exit-code --fail-severity major
 
 # Fail only on critical (OS mismatch, major version changes)
 pycheckem diff staging.json prod.json --exit-code --fail-severity critical
 ```
 
-### Diff Suppression
+### Severity Levels
+
+| Severity | Triggers |
+|----------|----------|
+| `identical` | No differences |
+| `minor` | Added packages, env var changes, path changes, config changes, install source changes |
+| `major` | Python minor version mismatch, package downgrades, removed packages |
+| `critical` | Python major version change, OS/architecture mismatch, package major version change |
+
+## Diff Suppression
 
 Suppress noisy or expected differences via `pyproject.toml` or CLI flags:
 
@@ -193,14 +208,9 @@ ignore_env_vars = ["HOSTNAME", "PWD", "SHLVL"]
 ignore_patterns = [".*_CACHE.*"]
 ```
 
-```bash
-# Or inline via CLI flags
-pycheckem diff a.json b.json --ignore-packages pip,setuptools --ignore-env-vars HOSTNAME
-```
-
 CLI flags merge with `pyproject.toml` config (they don't replace).
 
-### Output Formats
+## Output Formats
 
 | Format | Flag | Description |
 |--------|------|-------------|
@@ -208,10 +218,6 @@ CLI flags merge with `pyproject.toml` config (they don't replace).
 | JSON | `--format json` | Machine-readable for scripts and CI |
 | Rich | `--format rich` | Color-coded tables (requires `pip install pycheckem[pretty]`) |
 | Side-by-side | `--format sbs` | Two-column comparison |
-
-```bash
-pycheckem diff staging.json prod.json --format json | jq '.summary'
-```
 
 ## Python API
 
@@ -231,42 +237,15 @@ snap_b = pycheckem.load("prod.json")
 result = pycheckem.diff(snap_a, snap_b)
 
 # Inspect the result
-print(result.summary.severity)        # "identical", "minor", "major", "critical"
+print(result.summary.severity)          # "identical", "minor", "major", "critical"
 print(result.summary.total_differences)
-print(result.summary.breaking_changes) # list of human-readable strings
+print(result.summary.breaking_changes)  # list of human-readable strings
 
 # Render
 from pycheckem.render import ascii, json, rich, side_by_side
 print(ascii(result))
 print(json(result))
-print(rich(result))           # color-coded output (falls back to ascii if rich not installed)
-print(side_by_side(result))   # two-column comparison
 ```
-
-### Snapshot Contents
-
-The `Snapshot` object contains:
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `metadata` | `SnapshotMetadata` | Timestamp, hostname, label, pycheckem version |
-| `python` | `PythonInfo` | Version, implementation, executable, prefix, platform |
-| `packages` | `dict[str, PackageInfo]` | Installed packages with versions, dependencies, and install source |
-| `env_vars` | `dict[str, str]` | Environment variables (sensitive filtered by default) |
-| `os_info` | `OSInfo` | System, release, machine, distro |
-| `paths` | `PathInfo` | `sys.path` and `$PATH` entries |
-| `config_files` | `dict[str, ConfigFileInfo]` | Config file hashes and key inventories |
-| `project` | `ProjectInfo` | Project name, version, dependencies from `pyproject.toml` / `setup.cfg` |
-| `plugins` | `dict[str, dict]` | Data from registered collector plugins |
-
-### Diff Severity Levels
-
-| Severity | Triggers |
-|----------|----------|
-| `identical` | No differences |
-| `minor` | Added packages, env var changes, path changes, config changes, project metadata changes, install source changes |
-| `major` | Python minor version mismatch, package downgrades, removed packages, `requires-python` change |
-| `critical` | Python major version change, OS/architecture mismatch, package major version change |
 
 ## Plugins
 
@@ -282,21 +261,19 @@ The collector function receives no arguments and returns a dict. Plugin data is 
 
 ## GitHub Actions
 
-See [docs/github-actions.md](docs/github-actions.md) for a complete guide to CI integration, including:
+See [docs/github-actions.md](docs/github-actions.md) for a complete CI integration guide with baseline management, suppression rules, and PR comment examples.
 
-- Baseline management with artifacts
-- Severity threshold configuration
-- Suppression rules in workflows
-- PR comment integration
-- History tracking in CI
+## Installation Options
 
-## Requirements
+```bash
+pip install pycheckem                  # Core (zero dependencies)
+pip install pycheckem[pretty]          # Color-coded output via rich
+pip install pycheckem[toml]            # pyproject.toml config on Python < 3.11
+pip install -e ".[dev]"               # Development (editable + pytest)
+```
 
-- Python >= 3.8
-- No external dependencies (core)
-- Optional: `pip install pycheckem[pretty]` for color-coded output via `rich`
-- Optional: `pip install pycheckem[toml]` for `pyproject.toml` config on Python < 3.11
+**Requires:** Python >= 3.8
 
 ## License
 
-MIT
+[MIT](LICENSE)

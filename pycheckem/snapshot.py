@@ -35,7 +35,31 @@ def snapshot(
     include_sensitive: bool = False,
     exclude_patterns: Optional[List[str]] = None,
 ) -> Snapshot:
-    """Collect a full snapshot of the current runtime environment."""
+    """Capture a complete snapshot of the current Python runtime environment.
+
+    Collects everything needed to compare environments: Python version,
+    installed packages (with install sources via PEP 610), environment
+    variables, OS details, sys.path, PATH, config file hashes, project
+    metadata, and any registered plugin data.
+
+    Args:
+        label: Human-readable label for this snapshot (e.g. "staging", "prod").
+        config_files: Paths to config files to hash (e.g. [".env", "setup.cfg"]).
+        include_sensitive: If True, include env vars that match sensitive
+            patterns (passwords, tokens, keys). Filtered by default.
+        exclude_patterns: Additional regex patterns for env vars to exclude.
+
+    Returns:
+        A Snapshot dataclass containing all collected environment data.
+
+    Example:
+        >>> import pycheckem
+        >>> snap = pycheckem.snapshot(label="dev")
+        >>> snap.python.version
+        '3.12.0'
+        >>> len(snap.packages)
+        42
+    """
     metadata = SnapshotMetadata(
         timestamp=datetime.now(timezone.utc).isoformat(),
         hostname=socket.gethostname(),
@@ -83,7 +107,20 @@ def to_json(snap):
 
 
 def save(snap: Snapshot, path: str) -> None:
-    """Serialize a Snapshot to a JSON file."""
+    """Save a snapshot to a JSON file for later comparison.
+
+    The JSON file can be loaded back with ``load()`` or shared between
+    machines to compare environments.
+
+    Args:
+        snap: The Snapshot to serialize.
+        path: Output file path (e.g. "staging.json").
+
+    Example:
+        >>> import pycheckem
+        >>> snap = pycheckem.snapshot(label="prod")
+        >>> pycheckem.save(snap, "prod.json")
+    """
     data = dataclasses.asdict(snap)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
@@ -139,12 +176,28 @@ def _from_dict(data):
 
 
 def load(path: str) -> Snapshot:
-    """Deserialize a Snapshot from a JSON file.
+    """Load a previously saved snapshot from a JSON file.
+
+    Use this to load snapshots captured on other machines or at earlier
+    points in time, then pass two loaded snapshots to ``diff()`` to
+    compare them.
+
+    Args:
+        path: Path to the snapshot JSON file.
+
+    Returns:
+        A Snapshot dataclass with all environment data.
 
     Raises:
-        FileNotFoundError: if the file does not exist
-        json.JSONDecodeError: if the file is not valid JSON
-        ValueError: if required keys are missing
+        FileNotFoundError: If the file does not exist.
+        json.JSONDecodeError: If the file is not valid JSON.
+        ValueError: If required snapshot keys are missing.
+
+    Example:
+        >>> import pycheckem
+        >>> snap = pycheckem.load("prod.json")
+        >>> snap.metadata.label
+        'prod'
     """
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
