@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import subprocess
-from typing import Optional
 
-from pycheckem.snapshot import load_from_string, Snapshot
+from pycheckem.snapshot import load_from_string
 
 
 _DEFAULT_TIMEOUT = 30

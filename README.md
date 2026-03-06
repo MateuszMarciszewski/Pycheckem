@@ -69,6 +69,7 @@ pycheckem compare prod.json
 | CI gating | Manual scripting | Built-in `--exit-code --fail-severity` |
 | Machine-readable output | No | JSON, side-by-side, rich (color-coded) |
 | sys.path and PATH comparison | No | Yes |
+| Native library detection | No | Yes — detects missing .so/.dylib deps (ldd/otool) |
 
 ## When to Use pycheckem
 
@@ -77,6 +78,7 @@ pycheckem compare prod.json
 - **Pre-deployment checks** — compare the target environment against expectations before deploying
 - **Migration validation** — after moving to a new server, container, or Python version, verify the environment matches
 - **Audit trail** — snapshot environments over time and diff any two points in history
+- **Docker multi-stage builds** — snapshot build and runtime stages to catch missing native libraries (.so files) before deployment
 - **Remote debugging** — snapshot a remote host via SSH and diff against local
 
 ## What Gets Captured
@@ -92,6 +94,7 @@ Each snapshot records:
 | **Paths** | `sys.path` and `$PATH` entries |
 | **Config Files** | SHA-256 hash and top-level key inventory for any files you specify |
 | **Project** | Name, version, dependencies from `pyproject.toml` / `setup.cfg` |
+| **Native Libraries** | Shared library dependencies (.so/.pyd/.dylib) for compiled extensions — detects missing libs (uses `ldd`/`otool`) |
 | **Plugins** | Data from any registered pycheckem collector plugins |
 
 ## CLI Reference

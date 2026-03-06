@@ -7,7 +7,6 @@ import sys
 
 from pycheckem.snapshot import save
 from pycheckem.types import (
-    ConfigFileInfo,
     OSInfo,
     PackageInfo,
     PathInfo,
@@ -33,11 +32,17 @@ def _make_snapshot(**overrides):
             platform="linux",
         ),
         packages={
-            "requests": PackageInfo(version="2.31.0", location="/sp", requires=["urllib3"]),
-            "flask": PackageInfo(version="3.0.0", location="/sp", requires=["werkzeug"]),
+            "requests": PackageInfo(
+                version="2.31.0", location="/sp", requires=["urllib3"]
+            ),
+            "flask": PackageInfo(
+                version="3.0.0", location="/sp", requires=["werkzeug"]
+            ),
         },
         env_vars={"PATH": "/usr/bin", "HOME": "/home/dev"},
-        os_info=OSInfo(system="Linux", release="6.1.0", machine="x86_64", distro="Ubuntu 22.04"),
+        os_info=OSInfo(
+            system="Linux", release="6.1.0", machine="x86_64", distro="Ubuntu 22.04"
+        ),
         paths=PathInfo(sys_path=["/usr/lib/python3"], path_env=["/usr/bin"]),
         config_files={},
     )
@@ -59,7 +64,11 @@ def _save_pair(tmp_path, snap_a=None, snap_b=None):
                 "flask": PackageInfo("3.0.0", "/sp", ["werkzeug"]),
                 "gunicorn": PackageInfo("21.2.0", "/sp", []),
             },
-            env_vars={"PATH": "/usr/bin", "HOME": "/home/dev", "DATABASE_URL": "postgres://..."},
+            env_vars={
+                "PATH": "/usr/bin",
+                "HOME": "/home/dev",
+                "DATABASE_URL": "postgres://...",
+            },
         )
     file_a = str(tmp_path / "a.json")
     file_b = str(tmp_path / "b.json")
@@ -167,7 +176,9 @@ class TestCLIDiffExitCode:
                 "2026-03-02T12:00:00Z", "host-b", "prod", "0.1.0"
             ),
             packages={
-                "requests": PackageInfo("2.28.0", "/sp", ["urllib3"]),  # downgrade = major
+                "requests": PackageInfo(
+                    "2.28.0", "/sp", ["urllib3"]
+                ),  # downgrade = major
                 "flask": PackageInfo("3.0.0", "/sp", ["werkzeug"]),
             },
         )
@@ -197,13 +208,17 @@ class TestCLIDiffOnlyProject:
         from pycheckem.types import ProjectInfo
 
         a = _make_snapshot(
-            project=ProjectInfo("myapp", "1.0.0", ">=3.8", ["requests"], "pyproject.toml"),
+            project=ProjectInfo(
+                "myapp", "1.0.0", ">=3.8", ["requests"], "pyproject.toml"
+            ),
         )
         b = _make_snapshot(
             metadata=SnapshotMetadata(
                 "2026-03-02T12:00:00Z", "host-b", "prod", "0.1.0"
             ),
-            project=ProjectInfo("myapp", "2.0.0", ">=3.9", ["requests", "flask"], "pyproject.toml"),
+            project=ProjectInfo(
+                "myapp", "2.0.0", ">=3.9", ["requests", "flask"], "pyproject.toml"
+            ),
         )
         file_a, file_b = _save_pair(tmp_path, a, b)
         result = _run_cli("diff", file_a, file_b, "--only", "project")
@@ -233,8 +248,13 @@ class TestCLIDiffSuppression:
 
         # With suppression — ignore requests
         result = _run_cli(
-            "diff", file_a, file_b, "--format", "json",
-            "--ignore-packages", "requests",
+            "diff",
+            file_a,
+            file_b,
+            "--format",
+            "json",
+            "--ignore-packages",
+            "requests",
         )
         parsed = json.loads(result.stdout)
         assert "requests" not in parsed["packages"].get("changed", {})
@@ -245,14 +265,23 @@ class TestCLIDiffSuppression:
             metadata=SnapshotMetadata(
                 "2026-03-02T12:00:00Z", "host-b", "prod", "0.1.0"
             ),
-            env_vars={"PATH": "/usr/bin", "HOME": "/home/dev", "DATABASE_URL": "postgres://..."},
+            env_vars={
+                "PATH": "/usr/bin",
+                "HOME": "/home/dev",
+                "DATABASE_URL": "postgres://...",
+            },
         )
         file_a, file_b = _save_pair(tmp_path, a, b)
 
         # With suppression — ignore DATABASE_URL
         result = _run_cli(
-            "diff", file_a, file_b, "--format", "json",
-            "--ignore-env-vars", "DATABASE_URL",
+            "diff",
+            file_a,
+            file_b,
+            "--format",
+            "json",
+            "--ignore-env-vars",
+            "DATABASE_URL",
         )
         parsed = json.loads(result.stdout)
         assert "DATABASE_URL" not in parsed["env_vars"].get("added", {})
@@ -269,8 +298,13 @@ class TestCLIDiffSuppression:
 
         # With pattern suppression — ignore anything with CACHE
         result = _run_cli(
-            "diff", file_a, file_b, "--format", "json",
-            "--ignore-patterns", ".*CACHE.*",
+            "diff",
+            file_a,
+            file_b,
+            "--format",
+            "json",
+            "--ignore-patterns",
+            ".*CACHE.*",
         )
         parsed = json.loads(result.stdout)
         assert "MY_CACHE_DIR" not in parsed["env_vars"].get("removed", {})

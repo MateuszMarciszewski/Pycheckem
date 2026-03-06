@@ -4,6 +4,19 @@ All notable changes to pycheckem will be documented in this file.
 
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [0.4.1] - 2026-03-06
+
+### Added
+- Native library collector — detects shared library dependencies (.so/.pyd/.dylib) for compiled Python extensions using `ldd` (Linux) and `otool` (macOS)
+- Native library diff — shows added/removed/missing shared libraries between snapshots
+- Missing native libs flagged as critical severity with breaking change warnings
+- Native library sections in all renderers (ASCII, JSON, Rich, side-by-side)
+
+### Fixed
+- Pinned `setuptools>=64,<77` in build-system to prevent `license-file` metadata error with twine
+- Removed 102 unused imports across source and test files (ruff cleanup)
+- Reformatted 37 files with ruff
+
 ## [0.4.0] - 2026-03-05
 
 ### Added

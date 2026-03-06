@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pycheckem"
-version = "0.4.0"
+version = "0.4.1"
 description = "Snapshot and diff Python runtime environments — catch package, config, and OS mismatches across dev, staging, prod, and containers"
 readme = "README.md"
 license = {text = "MIT"}

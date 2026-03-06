@@ -6,10 +6,7 @@ the actually installed packages in the current environment.
 
 from __future__ import annotations
 
-import json as _json
-import os
 import re
-from typing import Dict, Optional, Tuple
 
 
 def parse_requirements(path):
@@ -74,7 +71,9 @@ def parse_requirements(path):
 
             # Split name from version specifier
             # Match on first version operator: ==, !=, >=, <=, ~=, >, <
-            match = re.match(r"^([A-Za-z0-9][A-Za-z0-9._-]*(?:\[[^\]]*\])?)\s*(.*)", line)
+            match = re.match(
+                r"^([A-Za-z0-9][A-Za-z0-9._-]*(?:\[[^\]]*\])?)\s*(.*)", line
+            )
             if not match:
                 continue
 

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
 import dataclasses
 
 import pytest
@@ -11,7 +10,6 @@ from pycheckem.version import __version__
 from pycheckem.types import (
     ConfigFileInfo,
     OSInfo,
-    PackageInfo,
     PathInfo,
     ProjectInfo,
     PythonInfo,
@@ -180,7 +178,6 @@ class TestSaveLoad:
 
     def test_roundtrip_project_explicit(self, tmp_path):
         """Roundtrip a snapshot with an explicit ProjectInfo."""
-        from pycheckem.snapshot import _from_dict
 
         snap = snapshot(label="project-test")
         # Inject a known project

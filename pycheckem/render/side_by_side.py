@@ -1,18 +1,6 @@
 from __future__ import annotations
 
 import os
-from typing import Dict, List, Optional, Tuple
-
-from pycheckem.types import (
-    ConfigDiff,
-    DiffResult,
-    OSDiff,
-    PackageDiff,
-    PathDiff,
-    ProjectDiff,
-    PythonDiff,
-    VarDiff,
-)
 
 
 def _get_terminal_width():
@@ -39,8 +27,12 @@ def _section_python(python, label_a, label_b):
         return []
     rows = []  # type: List[Tuple[str, str]]
     for field, (old, new) in python.changes.items():
-        rows.append(("{}: {}".format(field.capitalize(), old),
-                      "{}: {}".format(field.capitalize(), new)))
+        rows.append(
+            (
+                "{}: {}".format(field.capitalize(), old),
+                "{}: {}".format(field.capitalize(), new),
+            )
+        )
     return rows
 
 
@@ -52,11 +44,16 @@ def _section_packages(packages):
     for name, ver in sorted(packages.removed.items()):
         rows.append(("- {} {}".format(name, ver), "\u2014"))
     for name, vc in sorted(packages.changed.items()):
-        rows.append(("! {} {}".format(name, vc.version_a),
-                      "! {} {}".format(name, vc.version_b)))
+        rows.append(
+            ("! {} {}".format(name, vc.version_a), "! {} {}".format(name, vc.version_b))
+        )
     for name, sc in sorted(getattr(packages, "source_changed", {}).items()):
-        rows.append(("! {} [{}]".format(name, sc.source_a),
-                      "! {} [{}]".format(name, sc.source_b)))
+        rows.append(
+            (
+                "! {} [{}]".format(name, sc.source_a),
+                "! {} [{}]".format(name, sc.source_b),
+            )
+        )
     return rows
 
 
@@ -68,8 +65,7 @@ def _section_env_vars(env_vars):
     for name in sorted(env_vars.removed):
         rows.append(("- {}".format(name), "\u2014"))
     for name, (old, new) in sorted(env_vars.changed.items()):
-        rows.append(("! {}={}".format(name, old),
-                      "! {}={}".format(name, new)))
+        rows.append(("! {}={}".format(name, old), "! {}={}".format(name, new)))
     return rows
 
 
@@ -79,8 +75,12 @@ def _section_os(os_info):
         return []
     rows = []  # type: List[Tuple[str, str]]
     for field, (old, new) in os_info.changes.items():
-        rows.append(("{}: {}".format(field.capitalize(), old),
-                      "{}: {}".format(field.capitalize(), new)))
+        rows.append(
+            (
+                "{}: {}".format(field.capitalize(), old),
+                "{}: {}".format(field.capitalize(), new),
+            )
+        )
     return rows
 
 
@@ -131,6 +131,27 @@ def _section_project(project):
     return rows
 
 
+def _section_native_libs(native_libs):
+    # type: (Optional[NativeLibDiff]) -> List[Tuple[str, str]]
+    if native_libs is None:
+        return []
+    rows = []  # type: List[Tuple[str, str]]
+    for pkg in native_libs.packages_added:
+        rows.append(("\u2014", "+ {} (native)".format(pkg)))
+    for pkg in native_libs.packages_removed:
+        rows.append(("- {} (native)".format(pkg), "\u2014"))
+    for pkg, libs in sorted(native_libs.libs_added.items()):
+        for lib in libs:
+            rows.append(("\u2014", "+ {} \u2192 {}".format(pkg, lib)))
+    for pkg, libs in sorted(native_libs.libs_removed.items()):
+        for lib in libs:
+            rows.append(("- {} \u2192 {}".format(pkg, lib), "\u2014"))
+    for pkg, libs in sorted(native_libs.missing_in_b.items()):
+        for lib in libs:
+            rows.append(("", "! {} \u2192 {} NOT FOUND".format(pkg, lib)))
+    return rows
+
+
 def render_side_by_side(result, only=None, width=None):
     # type: (DiffResult, Optional[str], Optional[int]) -> str
     """Render a DiffResult as a two-column side-by-side comparison.
@@ -175,15 +196,23 @@ def render_side_by_side(result, only=None, width=None):
         return "\n".join(lines)
 
     section_map = {
-        "python": lambda: ("Python", _section_python(
-            result.python, result.label_a, result.label_b)),
+        "python": lambda: (
+            "Python",
+            _section_python(result.python, result.label_a, result.label_b),
+        ),
         "packages": lambda: ("Packages", _section_packages(result.packages)),
         "env": lambda: ("Environment Variables", _section_env_vars(result.env_vars)),
         "os": lambda: ("OS", _section_os(result.os_info)),
         "paths": lambda: ("Paths", _section_paths(result.paths)),
         "config": lambda: ("Config Files", _section_config_files(result.config_files)),
-        "project": lambda: ("Project", _section_project(
-            getattr(result, "project", None))),
+        "project": lambda: (
+            "Project",
+            _section_project(getattr(result, "project", None)),
+        ),
+        "native": lambda: (
+            "Native Libraries",
+            _section_native_libs(getattr(result, "native_libs", None)),
+        ),
     }
 
     def _render_section(key):
@@ -193,17 +222,28 @@ def render_side_by_side(result, only=None, width=None):
             return
         # Section title line
         title_line = "--- {} ---".format(title)
-        lines.append("{} | {}".format(
-            _pad(title_line, col_width), _pad(title_line, col_width)))
+        lines.append(
+            "{} | {}".format(_pad(title_line, col_width), _pad(title_line, col_width))
+        )
         for left, right in rows:
-            lines.append("{} | {}".format(
-                _pad(left, col_width), _pad(right, col_width)))
+            lines.append(
+                "{} | {}".format(_pad(left, col_width), _pad(right, col_width))
+            )
 
     if only is not None:
         if only in section_map:
             _render_section(only)
     else:
-        for key in ("python", "packages", "env", "os", "paths", "config", "project"):
+        for key in (
+            "python",
+            "packages",
+            "env",
+            "os",
+            "paths",
+            "config",
+            "project",
+            "native",
+        ):
             _render_section(key)
 
     # Footer

@@ -4,11 +4,12 @@ import dataclasses
 import json
 import socket
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from pycheckem.collectors import (
     collect_config_file,
     collect_env_vars,
+    collect_native_libs,
     collect_os_info,
     collect_packages,
     collect_paths,
@@ -17,6 +18,7 @@ from pycheckem.collectors import (
 )
 from pycheckem.types import (
     ConfigFileInfo,
+    NativeLibInfo,
     OSInfo,
     PackageInfo,
     PathInfo,
@@ -85,6 +87,7 @@ def snapshot(
 
     project = collect_project_info()
     plugin_data = run_plugins()
+    native_libs = collect_native_libs()
 
     return Snapshot(
         metadata=metadata,
@@ -96,6 +99,7 @@ def snapshot(
         config_files=cfg,
         project=project,
         plugins=plugin_data,
+        native_libs=native_libs,
     )
 
 
@@ -142,9 +146,7 @@ def _from_dict(data):
     metadata = SnapshotMetadata(**data["metadata"])
     python = PythonInfo(**data["python"])
 
-    packages = {
-        name: PackageInfo(**info) for name, info in data["packages"].items()
-    }
+    packages = {name: PackageInfo(**info) for name, info in data["packages"].items()}
 
     env_vars = data["env_vars"]
 
@@ -162,6 +164,10 @@ def _from_dict(data):
 
     plugins = data.get("plugins", {})
 
+    native_libs = {}  # type: Dict[str, List[NativeLibInfo]]
+    for pkg_name, lib_list in data.get("native_libs", {}).items():
+        native_libs[pkg_name] = [NativeLibInfo(**info) for info in lib_list]
+
     return Snapshot(
         metadata=metadata,
         python=python,
@@ -172,6 +178,7 @@ def _from_dict(data):
         config_files=config_files,
         project=project,
         plugins=plugins,
+        native_libs=native_libs,
     )
 
 

@@ -4,8 +4,6 @@ from pycheckem.diff import diff
 from pycheckem.render.ascii import render_ascii
 from pycheckem.types import (
     ConfigFileInfo,
-    DiffResult,
-    DiffSummary,
     OSInfo,
     PackageInfo,
     PathInfo,
@@ -31,11 +29,17 @@ def _make_snapshot(**overrides):
             platform="linux",
         ),
         packages={
-            "requests": PackageInfo(version="2.31.0", location="/sp", requires=["urllib3"]),
-            "flask": PackageInfo(version="3.0.0", location="/sp", requires=["werkzeug"]),
+            "requests": PackageInfo(
+                version="2.31.0", location="/sp", requires=["urllib3"]
+            ),
+            "flask": PackageInfo(
+                version="3.0.0", location="/sp", requires=["werkzeug"]
+            ),
         },
         env_vars={"PATH": "/usr/bin", "HOME": "/home/dev"},
-        os_info=OSInfo(system="Linux", release="6.1.0", machine="x86_64", distro="Ubuntu 22.04"),
+        os_info=OSInfo(
+            system="Linux", release="6.1.0", machine="x86_64", distro="Ubuntu 22.04"
+        ),
         paths=PathInfo(sys_path=["/usr/lib/python3"], path_env=["/usr/bin"]),
         config_files={},
     )
@@ -108,7 +112,9 @@ class TestRenderAsciiSections:
     def test_empty_section_omitted(self):
         a = _make_snapshot()
         b = _make_snapshot(
-            metadata=SnapshotMetadata("2026-03-02T12:00:00Z", "host-b", "prod", "0.1.0"),
+            metadata=SnapshotMetadata(
+                "2026-03-02T12:00:00Z", "host-b", "prod", "0.1.0"
+            ),
             env_vars={"PATH": "/usr/bin", "HOME": "/home/dev", "NEW": "val"},
         )
         result = diff(a, b)
@@ -158,7 +164,9 @@ class TestRenderAsciiSections:
 
     def test_config_files_section(self):
         a = _make_snapshot(config_files={".env": ConfigFileInfo("aaa", ["DB"])})
-        b = _make_snapshot(config_files={".env": ConfigFileInfo("bbb", ["DB", "CACHE"])})
+        b = _make_snapshot(
+            config_files={".env": ConfigFileInfo("bbb", ["DB", "CACHE"])}
+        )
         result = diff(a, b)
         output = render_ascii(result)
         assert "Config Files" in output
@@ -196,7 +204,9 @@ class TestRenderAsciiSummary:
 
     def test_no_breaking_line_for_minor(self):
         a = _make_snapshot()
-        b = _make_snapshot(env_vars={"PATH": "/usr/bin", "HOME": "/home/dev", "NEW": "val"})
+        b = _make_snapshot(
+            env_vars={"PATH": "/usr/bin", "HOME": "/home/dev", "NEW": "val"}
+        )
         result = diff(a, b)
         output = render_ascii(result)
         assert "Breaking:" not in output
@@ -234,14 +244,23 @@ class TestRenderAsciiOnly:
 
 class TestAsciiSourceChanges:
     def test_source_change_rendered(self):
-        a = _make_snapshot(packages={
-            "mylib": PackageInfo("1.0.0", "/sp", [], install_source="editable",
-                                  source_url="file:///dev/mylib",
-                                  source_detail="file:///dev/mylib"),
-        })
-        b = _make_snapshot(packages={
-            "mylib": PackageInfo("1.0.0", "/sp", [], install_source="pypi"),
-        })
+        a = _make_snapshot(
+            packages={
+                "mylib": PackageInfo(
+                    "1.0.0",
+                    "/sp",
+                    [],
+                    install_source="editable",
+                    source_url="file:///dev/mylib",
+                    source_detail="file:///dev/mylib",
+                ),
+            }
+        )
+        b = _make_snapshot(
+            packages={
+                "mylib": PackageInfo("1.0.0", "/sp", [], install_source="pypi"),
+            }
+        )
         result = diff(a, b)
         output = render_ascii(result)
         assert "[editable]" in output
@@ -249,12 +268,16 @@ class TestAsciiSourceChanges:
         assert "mylib" in output
 
     def test_version_change_with_source_shows_source(self):
-        a = _make_snapshot(packages={
-            "mylib": PackageInfo("1.0.0", "/sp", [], install_source="editable"),
-        })
-        b = _make_snapshot(packages={
-            "mylib": PackageInfo("2.0.0", "/sp", [], install_source="pypi"),
-        })
+        a = _make_snapshot(
+            packages={
+                "mylib": PackageInfo("1.0.0", "/sp", [], install_source="editable"),
+            }
+        )
+        b = _make_snapshot(
+            packages={
+                "mylib": PackageInfo("2.0.0", "/sp", [], install_source="pypi"),
+            }
+        )
         result = diff(a, b)
         output = render_ascii(result)
         assert "[editable]" in output

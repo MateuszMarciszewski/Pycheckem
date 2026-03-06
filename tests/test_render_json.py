@@ -31,10 +31,14 @@ def _make_snapshot(**overrides):
             platform="linux",
         ),
         packages={
-            "requests": PackageInfo(version="2.31.0", location="/sp", requires=["urllib3"]),
+            "requests": PackageInfo(
+                version="2.31.0", location="/sp", requires=["urllib3"]
+            ),
         },
         env_vars={"PATH": "/usr/bin"},
-        os_info=OSInfo(system="Linux", release="6.1.0", machine="x86_64", distro="Ubuntu 22.04"),
+        os_info=OSInfo(
+            system="Linux", release="6.1.0", machine="x86_64", distro="Ubuntu 22.04"
+        ),
         paths=PathInfo(sys_path=["/usr/lib/python3"], path_env=["/usr/bin"]),
         config_files={},
     )
@@ -63,8 +67,17 @@ class TestRenderJson:
         result = diff(snap, snap)
         output = render_json(result)
         parsed = json.loads(output)
-        for key in ("label_a", "label_b", "python", "packages", "env_vars",
-                     "os_info", "paths", "config_files", "summary"):
+        for key in (
+            "label_a",
+            "label_b",
+            "python",
+            "packages",
+            "env_vars",
+            "os_info",
+            "paths",
+            "config_files",
+            "summary",
+        ):
             assert key in parsed
 
     def test_summary_fields(self):

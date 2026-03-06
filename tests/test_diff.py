@@ -39,11 +39,17 @@ def _make_snapshot(**overrides):
             platform="linux",
         ),
         packages={
-            "requests": PackageInfo(version="2.31.0", location="/sp", requires=["urllib3"]),
-            "flask": PackageInfo(version="3.0.0", location="/sp", requires=["werkzeug"]),
+            "requests": PackageInfo(
+                version="2.31.0", location="/sp", requires=["urllib3"]
+            ),
+            "flask": PackageInfo(
+                version="3.0.0", location="/sp", requires=["werkzeug"]
+            ),
         },
         env_vars={"PATH": "/usr/bin", "HOME": "/home/dev"},
-        os_info=OSInfo(system="Linux", release="6.1.0", machine="x86_64", distro="Ubuntu 22.04"),
+        os_info=OSInfo(
+            system="Linux", release="6.1.0", machine="x86_64", distro="Ubuntu 22.04"
+        ),
         paths=PathInfo(sys_path=["/usr/lib/python3"], path_env=["/usr/bin"]),
         config_files={},
     )
@@ -324,23 +330,21 @@ class TestDiffTopLevel:
 
     def test_os_mismatch_critical(self):
         a = _make_snapshot()
-        b = _make_snapshot(
-            os_info=OSInfo("Darwin", "23.1.0", "arm64", "macOS 14.1.1")
-        )
+        b = _make_snapshot(os_info=OSInfo("Darwin", "23.1.0", "arm64", "macOS 14.1.1"))
         result = diff(a, b)
         assert result.summary.severity == "critical"
         assert any("OS" in bc for bc in result.summary.breaking_changes)
 
     def test_env_var_added_minor(self):
         a = _make_snapshot()
-        b = _make_snapshot(env_vars={"PATH": "/usr/bin", "HOME": "/home/dev", "NEW": "val"})
+        b = _make_snapshot(
+            env_vars={"PATH": "/usr/bin", "HOME": "/home/dev", "NEW": "val"}
+        )
         result = diff(a, b)
         assert result.summary.severity == "minor"
 
     def test_config_hash_mismatch_in_diff(self):
-        a = _make_snapshot(
-            config_files={".env": ConfigFileInfo("aaa", ["DB", "LOG"])}
-        )
+        a = _make_snapshot(config_files={".env": ConfigFileInfo("aaa", ["DB", "LOG"])})
         b = _make_snapshot(
             config_files={".env": ConfigFileInfo("bbb", ["DB", "CACHE"])}
         )
@@ -390,7 +394,9 @@ class TestDiffProject:
 
     def test_deps_added_and_removed(self):
         a = ProjectInfo("myapp", "1.0.0", None, ["requests", "flask"], "pyproject.toml")
-        b = ProjectInfo("myapp", "1.0.0", None, ["requests", "django"], "pyproject.toml")
+        b = ProjectInfo(
+            "myapp", "1.0.0", None, ["requests", "django"], "pyproject.toml"
+        )
         result = diff_project(a, b)
         assert "django" in result.deps_added
         assert "flask" in result.deps_removed
@@ -405,10 +411,14 @@ class TestDiffProject:
 
     def test_project_diff_in_top_level(self):
         a = _make_snapshot(
-            project=ProjectInfo("myapp", "1.0.0", ">=3.10", ["requests"], "pyproject.toml")
+            project=ProjectInfo(
+                "myapp", "1.0.0", ">=3.10", ["requests"], "pyproject.toml"
+            )
         )
         b = _make_snapshot(
-            project=ProjectInfo("myapp", "2.0.0", ">=3.11", ["requests", "flask"], "pyproject.toml")
+            project=ProjectInfo(
+                "myapp", "2.0.0", ">=3.11", ["requests", "flask"], "pyproject.toml"
+            )
         )
         result = diff(a, b)
         assert result.project is not None
@@ -425,7 +435,9 @@ class TestDiffProject:
         )
         result = diff(a, b)
         assert result.summary.severity == "major"
-        assert any("requires-python" in bc.lower() for bc in result.summary.breaking_changes)
+        assert any(
+            "requires-python" in bc.lower() for bc in result.summary.breaking_changes
+        )
 
     def test_project_version_change_minor_severity(self):
         a = _make_snapshot(
@@ -442,7 +454,13 @@ class TestDiffProject:
             project=ProjectInfo("myapp", "1.0.0", None, ["requests"], "pyproject.toml")
         )
         b = _make_snapshot(
-            project=ProjectInfo("myapp", "1.0.0", None, ["requests", "flask", "django"], "pyproject.toml")
+            project=ProjectInfo(
+                "myapp",
+                "1.0.0",
+                None,
+                ["requests", "flask", "django"],
+                "pyproject.toml",
+            )
         )
         result = diff(a, b)
         # 2 deps added
@@ -451,8 +469,15 @@ class TestDiffProject:
 
 class TestDiffPackageSources:
     def test_same_version_different_source(self):
-        a = {"mylib": PackageInfo("1.0.0", "/sp", [], install_source="editable",
-                                   source_url="file:///dev/mylib")}
+        a = {
+            "mylib": PackageInfo(
+                "1.0.0",
+                "/sp",
+                [],
+                install_source="editable",
+                source_url="file:///dev/mylib",
+            )
+        }
         b = {"mylib": PackageInfo("1.0.0", "/sp", [], install_source="pypi")}
         result = diff_packages(a, b)
         assert result.changed == {}
@@ -477,22 +502,30 @@ class TestDiffPackageSources:
         assert result.source_changed == {}
 
     def test_source_change_minor_severity(self):
-        a = _make_snapshot(packages={
-            "mylib": PackageInfo("1.0.0", "/sp", [], install_source="editable"),
-        })
-        b = _make_snapshot(packages={
-            "mylib": PackageInfo("1.0.0", "/sp", [], install_source="pypi"),
-        })
+        a = _make_snapshot(
+            packages={
+                "mylib": PackageInfo("1.0.0", "/sp", [], install_source="editable"),
+            }
+        )
+        b = _make_snapshot(
+            packages={
+                "mylib": PackageInfo("1.0.0", "/sp", [], install_source="pypi"),
+            }
+        )
         result = diff(a, b)
         assert result.summary.severity == "minor"
 
     def test_source_change_counted(self):
-        a = _make_snapshot(packages={
-            "mylib": PackageInfo("1.0.0", "/sp", [], install_source="editable"),
-        })
-        b = _make_snapshot(packages={
-            "mylib": PackageInfo("1.0.0", "/sp", [], install_source="pypi"),
-        })
+        a = _make_snapshot(
+            packages={
+                "mylib": PackageInfo("1.0.0", "/sp", [], install_source="editable"),
+            }
+        )
+        b = _make_snapshot(
+            packages={
+                "mylib": PackageInfo("1.0.0", "/sp", [], install_source="pypi"),
+            }
+        )
         result = diff(a, b)
         assert result.summary.total_differences == 1
 

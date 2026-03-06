@@ -89,10 +89,12 @@ class TestCollectPackages:
     @patch("pycheckem.collectors.packages.distributions")
     def test_editable_package_source(self, mock_dists):
         dist = _make_mock_dist("mylib", "1.0.0")
-        dist.read_text.return_value = json.dumps({
-            "url": "file:///home/dev/mylib",
-            "dir_info": {"editable": True},
-        })
+        dist.read_text.return_value = json.dumps(
+            {
+                "url": "file:///home/dev/mylib",
+                "dir_info": {"editable": True},
+            }
+        )
         mock_dists.return_value = [dist]
         result = collect_packages()
         assert result["mylib"].install_source == "editable"
@@ -114,10 +116,12 @@ class TestParseInstallSource:
 
     def test_editable_install(self):
         dist = MagicMock()
-        dist.read_text.return_value = json.dumps({
-            "url": "file:///home/dev/mylib",
-            "dir_info": {"editable": True},
-        })
+        dist.read_text.return_value = json.dumps(
+            {
+                "url": "file:///home/dev/mylib",
+                "dir_info": {"editable": True},
+            }
+        )
         source, url, detail = _parse_install_source(dist)
         assert source == "editable"
         assert url == "file:///home/dev/mylib"
@@ -125,10 +129,12 @@ class TestParseInstallSource:
 
     def test_local_directory_install(self):
         dist = MagicMock()
-        dist.read_text.return_value = json.dumps({
-            "url": "file:///tmp/mylib",
-            "dir_info": {},
-        })
+        dist.read_text.return_value = json.dumps(
+            {
+                "url": "file:///tmp/mylib",
+                "dir_info": {},
+            }
+        )
         source, url, detail = _parse_install_source(dist)
         assert source == "local"
         assert url == "file:///tmp/mylib"
@@ -136,10 +142,12 @@ class TestParseInstallSource:
 
     def test_vcs_git_install(self):
         dist = MagicMock()
-        dist.read_text.return_value = json.dumps({
-            "url": "https://github.com/user/repo",
-            "vcs_info": {"vcs": "git", "commit_id": "abc123"},
-        })
+        dist.read_text.return_value = json.dumps(
+            {
+                "url": "https://github.com/user/repo",
+                "vcs_info": {"vcs": "git", "commit_id": "abc123"},
+            }
+        )
         source, url, detail = _parse_install_source(dist)
         assert source == "vcs"
         assert url == "https://github.com/user/repo"
@@ -147,10 +155,12 @@ class TestParseInstallSource:
 
     def test_archive_install(self):
         dist = MagicMock()
-        dist.read_text.return_value = json.dumps({
-            "url": "https://files.pythonhosted.org/packages/mylib-1.0.0.whl",
-            "archive_info": {"hash": "sha256=abc"},
-        })
+        dist.read_text.return_value = json.dumps(
+            {
+                "url": "https://files.pythonhosted.org/packages/mylib-1.0.0.whl",
+                "archive_info": {"hash": "sha256=abc"},
+            }
+        )
         source, url, detail = _parse_install_source(dist)
         assert source == "archive"
         assert url == "https://files.pythonhosted.org/packages/mylib-1.0.0.whl"

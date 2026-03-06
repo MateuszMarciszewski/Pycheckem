@@ -155,5 +155,6 @@ class TestPluginSnapshotIntegration:
             json.dump(data, f)
 
         from pycheckem.snapshot import load
+
         snap = load(path)
         assert snap.plugins == {}

@@ -32,10 +32,14 @@ def _make_snapshot(**overrides):
             platform="linux",
         ),
         packages={
-            "requests": PackageInfo(version="2.31.0", location="/sp", requires=["urllib3"]),
+            "requests": PackageInfo(
+                version="2.31.0", location="/sp", requires=["urllib3"]
+            ),
         },
         env_vars={"PATH": "/usr/bin", "HOME": "/home/dev"},
-        os_info=OSInfo(system="Linux", release="6.1.0", machine="x86_64", distro="Ubuntu 22.04"),
+        os_info=OSInfo(
+            system="Linux", release="6.1.0", machine="x86_64", distro="Ubuntu 22.04"
+        ),
         paths=PathInfo(sys_path=["/usr/lib/python3"], path_env=["/usr/bin"]),
         config_files={},
     )
@@ -121,8 +125,12 @@ class TestGuardFlags:
         saved = str(tmp_path / "baseline.json")
         save(snap, saved)
         result = _run_cli(
-            "guard", saved, "--format", "json",
-            "--ignore-packages", "pip,setuptools,wheel",
+            "guard",
+            saved,
+            "--format",
+            "json",
+            "--ignore-packages",
+            "pip,setuptools,wheel",
         )
         parsed = json.loads(result.stdout)
         assert "summary" in parsed

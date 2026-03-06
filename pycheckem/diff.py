@@ -1,24 +1,17 @@
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Tuple
 
 from pycheckem.types import (
     ConfigDiff,
     ConfigFileDiff,
-    ConfigFileInfo,
     DiffResult,
     DiffSummary,
+    NativeLibDiff,
     OSDiff,
-    OSInfo,
     PackageDiff,
-    PackageInfo,
     PathDiff,
-    PathInfo,
     ProjectDiff,
-    ProjectInfo,
     PythonDiff,
-    PythonInfo,
-    Snapshot,
     SourceChange,
     VarDiff,
     VersionChange,
@@ -46,7 +39,12 @@ def is_major_change(a, b):
     # type: (str, str) -> bool
     """True if the first version component differs."""
     va, vb = parse_version(a), parse_version(b)
-    if len(va) > 0 and len(vb) > 0 and isinstance(va[0], int) and isinstance(vb[0], int):
+    if (
+        len(va) > 0
+        and len(vb) > 0
+        and isinstance(va[0], int)
+        and isinstance(vb[0], int)
+    ):
         return va[0] != vb[0]
     return a != b
 
@@ -258,9 +256,13 @@ def diff_project(a, b):
     deps_added = sorted(deps_b - deps_a)
     deps_removed = sorted(deps_a - deps_b)
 
-    if (name_changed is None and version_changed is None
-            and requires_python_changed is None
-            and not deps_added and not deps_removed):
+    if (
+        name_changed is None
+        and version_changed is None
+        and requires_python_changed is None
+        and not deps_added
+        and not deps_removed
+    ):
         return None
 
     return ProjectDiff(
@@ -272,6 +274,80 @@ def diff_project(a, b):
     )
 
 
+def diff_native_libs(a, b):
+    # type: (Dict[str, List[NativeLibInfo]], Dict[str, List[NativeLibInfo]]) -> Optional[NativeLibDiff]
+    """Compare native library dependencies between two snapshots."""
+    keys_a = set(a.keys())
+    keys_b = set(b.keys())
+
+    packages_added = sorted(keys_b - keys_a)
+    packages_removed = sorted(keys_a - keys_b)
+
+    libs_added = {}  # type: Dict[str, List[str]]
+    libs_removed = {}  # type: Dict[str, List[str]]
+    missing_in_a = {}  # type: Dict[str, List[str]]
+    missing_in_b = {}  # type: Dict[str, List[str]]
+
+    for pkg in sorted(keys_a & keys_b):
+        # Gather all linked libs across all extensions in each snapshot
+        all_libs_a = set()
+        all_libs_b = set()
+        all_missing_a = set()
+        all_missing_b = set()
+
+        for info in a[pkg]:
+            all_libs_a.update(info.linked_libs)
+            all_missing_a.update(info.missing)
+        for info in b[pkg]:
+            all_libs_b.update(info.linked_libs)
+            all_missing_b.update(info.missing)
+
+        added = sorted(all_libs_b - all_libs_a)
+        removed = sorted(all_libs_a - all_libs_b)
+        if added:
+            libs_added[pkg] = added
+        if removed:
+            libs_removed[pkg] = removed
+        if all_missing_a:
+            missing_in_a[pkg] = sorted(all_missing_a)
+        if all_missing_b:
+            missing_in_b[pkg] = sorted(all_missing_b)
+
+    # Also capture missing libs for packages only in one snapshot
+    for pkg in packages_added:
+        pkg_missing = set()
+        for info in b[pkg]:
+            pkg_missing.update(info.missing)
+        if pkg_missing:
+            missing_in_b[pkg] = sorted(pkg_missing)
+
+    for pkg in packages_removed:
+        pkg_missing = set()
+        for info in a[pkg]:
+            pkg_missing.update(info.missing)
+        if pkg_missing:
+            missing_in_a[pkg] = sorted(pkg_missing)
+
+    if (
+        not packages_added
+        and not packages_removed
+        and not libs_added
+        and not libs_removed
+        and not missing_in_a
+        and not missing_in_b
+    ):
+        return None
+
+    return NativeLibDiff(
+        packages_added=packages_added,
+        packages_removed=packages_removed,
+        libs_added=libs_added,
+        libs_removed=libs_removed,
+        missing_in_a=missing_in_a,
+        missing_in_b=missing_in_b,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Severity scoring
 # ---------------------------------------------------------------------------
@@ -280,13 +356,14 @@ _SEVERITY_ORDER = {"identical": 0, "minor": 1, "major": 2, "critical": 3}
 
 
 def compute_severity(
-    python_diff,   # type: Optional[PythonDiff]
-    pkg_diff,      # type: PackageDiff
-    env_diff,      # type: VarDiff
-    os_diff,       # type: Optional[OSDiff]
-    path_diff,     # type: PathDiff
-    config_diff,   # type: ConfigDiff
+    python_diff,  # type: Optional[PythonDiff]
+    pkg_diff,  # type: PackageDiff
+    env_diff,  # type: VarDiff
+    os_diff,  # type: Optional[OSDiff]
+    path_diff,  # type: PathDiff
+    config_diff,  # type: ConfigDiff
     project_diff=None,  # type: Optional[ProjectDiff]
+    native_lib_diff=None,  # type: Optional[NativeLibDiff]
 ):
     # type: (...) -> Tuple[str, List[str]]
     """Compute overall severity and generate breaking_changes list."""
@@ -325,9 +402,7 @@ def compute_severity(
             for field in ("system", "machine"):
                 if field in os_diff.changes:
                     old, new = os_diff.changes[field]
-                    breaking.append(
-                        "OS {} mismatch: {} vs {}".format(field, old, new)
-                    )
+                    breaking.append("OS {} mismatch: {} vs {}".format(field, old, new))
         else:
             raise_to("minor")
 
@@ -368,8 +443,12 @@ def compute_severity(
         raise_to("minor")
 
     # --- Paths ---
-    if (path_diff.sys_path_added or path_diff.sys_path_removed
-            or path_diff.path_env_added or path_diff.path_env_removed):
+    if (
+        path_diff.sys_path_added
+        or path_diff.sys_path_removed
+        or path_diff.path_env_added
+        or path_diff.path_env_removed
+    ):
         raise_to("minor")
 
     # --- Config files ---
@@ -384,21 +463,46 @@ def compute_severity(
             breaking.append(
                 "Project requires-python changed: {} -> {}".format(old, new)
             )
-        if (project_diff.name_changed or project_diff.version_changed
-                or project_diff.deps_added or project_diff.deps_removed):
+        if (
+            project_diff.name_changed
+            or project_diff.version_changed
+            or project_diff.deps_added
+            or project_diff.deps_removed
+        ):
+            raise_to("minor")
+
+    # --- Native libs ---
+    if native_lib_diff is not None:
+        # Missing libs in B (the target) are critical — runtime will break
+        if native_lib_diff.missing_in_b:
+            raise_to("critical")
+            for pkg, libs in native_lib_diff.missing_in_b.items():
+                breaking.append(
+                    "Missing native libs in {}: {}".format(pkg, ", ".join(libs))
+                )
+        # Removed linked libs are major — something changed in the system
+        if native_lib_diff.libs_removed:
+            raise_to("major")
+        # Other native lib changes are minor
+        if (
+            native_lib_diff.libs_added
+            or native_lib_diff.packages_added
+            or native_lib_diff.packages_removed
+        ):
             raise_to("minor")
 
     return severity, breaking
 
 
 def count_differences(
-    python_diff,   # type: Optional[PythonDiff]
-    pkg_diff,      # type: PackageDiff
-    env_diff,      # type: VarDiff
-    os_diff,       # type: Optional[OSDiff]
-    path_diff,     # type: PathDiff
-    config_diff,   # type: ConfigDiff
+    python_diff,  # type: Optional[PythonDiff]
+    pkg_diff,  # type: PackageDiff
+    env_diff,  # type: VarDiff
+    os_diff,  # type: Optional[OSDiff]
+    path_diff,  # type: PathDiff
+    config_diff,  # type: ConfigDiff
     project_diff=None,  # type: Optional[ProjectDiff]
+    native_lib_diff=None,  # type: Optional[NativeLibDiff]
 ):
     # type: (...) -> int
     """Count total number of individual differences."""
@@ -407,16 +511,26 @@ def count_differences(
     if python_diff is not None:
         count += len(python_diff.changes)
 
-    count += (len(pkg_diff.added) + len(pkg_diff.removed)
-              + len(pkg_diff.changed) + len(pkg_diff.source_changed))
+    count += (
+        len(pkg_diff.added)
+        + len(pkg_diff.removed)
+        + len(pkg_diff.changed)
+        + len(pkg_diff.source_changed)
+    )
     count += len(env_diff.added) + len(env_diff.removed) + len(env_diff.changed)
 
     if os_diff is not None:
         count += len(os_diff.changes)
 
-    count += (len(path_diff.sys_path_added) + len(path_diff.sys_path_removed)
-              + len(path_diff.path_env_added) + len(path_diff.path_env_removed))
-    count += len(config_diff.added) + len(config_diff.removed) + len(config_diff.changed)
+    count += (
+        len(path_diff.sys_path_added)
+        + len(path_diff.sys_path_removed)
+        + len(path_diff.path_env_added)
+        + len(path_diff.path_env_removed)
+    )
+    count += (
+        len(config_diff.added) + len(config_diff.removed) + len(config_diff.changed)
+    )
 
     if project_diff is not None:
         if project_diff.name_changed:
@@ -426,6 +540,13 @@ def count_differences(
         if project_diff.requires_python_changed:
             count += 1
         count += len(project_diff.deps_added) + len(project_diff.deps_removed)
+
+    if native_lib_diff is not None:
+        count += len(native_lib_diff.packages_added)
+        count += len(native_lib_diff.packages_removed)
+        count += sum(len(v) for v in native_lib_diff.libs_added.values())
+        count += sum(len(v) for v in native_lib_diff.libs_removed.values())
+        count += sum(len(v) for v in native_lib_diff.missing_in_b.values())
 
     return count
 
@@ -472,12 +593,16 @@ def diff(a, b):
         getattr(a, "project", None),
         getattr(b, "project", None),
     )
+    native_libs = diff_native_libs(
+        getattr(a, "native_libs", {}),
+        getattr(b, "native_libs", {}),
+    )
 
     total = count_differences(
-        python, packages, env_vars, os_info, paths, config_files, project
+        python, packages, env_vars, os_info, paths, config_files, project, native_libs
     )
     severity, breaking = compute_severity(
-        python, packages, env_vars, os_info, paths, config_files, project
+        python, packages, env_vars, os_info, paths, config_files, project, native_libs
     )
 
     label_a = a.metadata.label or a.metadata.hostname
@@ -493,6 +618,7 @@ def diff(a, b):
         paths=paths,
         config_files=config_files,
         project=project,
+        native_libs=native_libs,
         summary=DiffSummary(
             total_differences=total,
             severity=severity,

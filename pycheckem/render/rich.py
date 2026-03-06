@@ -1,18 +1,7 @@
 from __future__ import annotations
 
-from typing import List, Optional
 
 from pycheckem.diff import is_major_change
-from pycheckem.types import (
-    ConfigDiff,
-    DiffResult,
-    OSDiff,
-    PackageDiff,
-    PathDiff,
-    ProjectDiff,
-    PythonDiff,
-    VarDiff,
-)
 
 try:
     from rich.console import Console
@@ -48,8 +37,12 @@ def _section_python(python):
 def _section_packages(packages):
     # type: (PackageDiff) -> Optional[Table]
     source_changed = getattr(packages, "source_changed", {})
-    total = (len(packages.added) + len(packages.removed)
-             + len(packages.changed) + len(source_changed))
+    total = (
+        len(packages.added)
+        + len(packages.removed)
+        + len(packages.changed)
+        + len(source_changed)
+    )
     if total == 0:
         return None
     n = "difference" if total == 1 else "differences"
@@ -128,8 +121,12 @@ def _section_os(os_info):
 
 def _section_paths(paths):
     # type: (PathDiff) -> Optional[Table]
-    total = (len(paths.sys_path_added) + len(paths.sys_path_removed)
-             + len(paths.path_env_added) + len(paths.path_env_removed))
+    total = (
+        len(paths.sys_path_added)
+        + len(paths.sys_path_removed)
+        + len(paths.path_env_added)
+        + len(paths.path_env_removed)
+    )
     if total == 0:
         return None
     n = "difference" if total == 1 else "differences"
@@ -154,7 +151,9 @@ def _section_paths(paths):
 
 def _section_config_files(config_files):
     # type: (ConfigDiff) -> Optional[Table]
-    total = len(config_files.added) + len(config_files.removed) + len(config_files.changed)
+    total = (
+        len(config_files.added) + len(config_files.removed) + len(config_files.changed)
+    )
     if total == 0:
         return None
     n = "difference" if total == 1 else "differences"
@@ -205,6 +204,45 @@ def _section_project(project):
     return table
 
 
+def _section_native_libs(native_libs):
+    # type: (Optional[NativeLibDiff]) -> Optional[Table]
+    if native_libs is None:
+        return None
+    total = (
+        len(native_libs.packages_added)
+        + len(native_libs.packages_removed)
+        + sum(len(v) for v in native_libs.libs_added.values())
+        + sum(len(v) for v in native_libs.libs_removed.values())
+        + sum(len(v) for v in native_libs.missing_in_b.values())
+    )
+    if total == 0:
+        return None
+    n = "difference" if total == 1 else "differences"
+    table = Table(
+        title="Native Libraries ({} {})".format(total, n),
+        show_header=True,
+        title_style="bold cyan",
+    )
+    table.add_column("Change", style="bold")
+    table.add_column("Package")
+    table.add_column("Library")
+    table.add_column("Note", style="yellow")
+    for pkg in native_libs.packages_added:
+        table.add_row("[green]+[/green]", pkg, "", "new native extensions")
+    for pkg in native_libs.packages_removed:
+        table.add_row("[red]-[/red]", pkg, "", "native extensions removed")
+    for pkg, libs in sorted(native_libs.libs_added.items()):
+        for lib in libs:
+            table.add_row("[green]+[/green]", pkg, lib, "")
+    for pkg, libs in sorted(native_libs.libs_removed.items()):
+        for lib in libs:
+            table.add_row("[red]-[/red]", pkg, lib, "")
+    for pkg, libs in sorted(native_libs.missing_in_b.items()):
+        for lib in libs:
+            table.add_row("[bold red]![/bold red]", pkg, lib, "NOT FOUND")
+    return table
+
+
 def render_rich(result, only=None):
     # type: (DiffResult, Optional[str]) -> str
     """Render a DiffResult with color-coded tables using the rich library.
@@ -227,6 +265,7 @@ def render_rich(result, only=None):
     """
     if not _RICH_AVAILABLE:
         from pycheckem.render.ascii import render_ascii
+
         return render_ascii(result, only=only)
 
     console = Console(record=True, force_terminal=True)
@@ -247,6 +286,7 @@ def render_rich(result, only=None):
         "paths": lambda: _section_paths(result.paths),
         "config": lambda: _section_config_files(result.config_files),
         "project": lambda: _section_project(getattr(result, "project", None)),
+        "native": lambda: _section_native_libs(getattr(result, "native_libs", None)),
     }
 
     if only is not None:
@@ -256,7 +296,16 @@ def render_rich(result, only=None):
             if table is not None:
                 console.print(table)
     else:
-        for key in ("python", "packages", "env", "os", "paths", "config", "project"):
+        for key in (
+            "python",
+            "packages",
+            "env",
+            "os",
+            "paths",
+            "config",
+            "project",
+            "native",
+        ):
             table = section_map[key]()
             if table is not None:
                 console.print(table)

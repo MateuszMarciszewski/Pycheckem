@@ -54,7 +54,9 @@ class TestSnapshotTypes:
         assert info.implementation == "CPython"
 
     def test_package_info_fields(self):
-        pkg = PackageInfo(version="2.31.0", location="/site-packages", requires=["urllib3"])
+        pkg = PackageInfo(
+            version="2.31.0", location="/site-packages", requires=["urllib3"]
+        )
         assert pkg.version == "2.31.0"
         assert pkg.requires == ["urllib3"]
 
@@ -86,7 +88,9 @@ class TestSnapshotTypes:
         assert "requests" in sample_snapshot.packages
         assert sample_snapshot.python.version == "3.11.4"
 
-    def test_snapshot_default_config_files(self, sample_metadata, sample_python_info, sample_os_info, sample_paths):
+    def test_snapshot_default_config_files(
+        self, sample_metadata, sample_python_info, sample_os_info, sample_paths
+    ):
         snap = Snapshot(
             metadata=sample_metadata,
             python=sample_python_info,
@@ -151,8 +155,10 @@ class TestDiffTypes:
 
     def test_config_file_diff(self):
         cfd = ConfigFileDiff(
-            sha256_a="aaa", sha256_b="bbb",
-            keys_added=["NEW_KEY"], keys_removed=[],
+            sha256_a="aaa",
+            sha256_b="bbb",
+            keys_added=["NEW_KEY"],
+            keys_removed=[],
         )
         assert cfd.keys_added == ["NEW_KEY"]
 
@@ -178,10 +184,14 @@ class TestDiffTypes:
             env_vars=VarDiff(added={}, removed={}, changed={}, unchanged_count=0),
             os_info=None,
             paths=PathDiff(
-                sys_path_added=[], sys_path_removed=[],
-                path_env_added=[], path_env_removed=[],
+                sys_path_added=[],
+                sys_path_removed=[],
+                path_env_added=[],
+                path_env_removed=[],
             ),
-            config_files=ConfigDiff(added=[], removed=[], changed={}, unchanged_count=0),
+            config_files=ConfigDiff(
+                added=[], removed=[], changed={}, unchanged_count=0
+            ),
             summary=DiffSummary(
                 total_differences=0, severity="identical", breaking_changes=[]
             ),
@@ -198,10 +208,14 @@ class TestDiffTypes:
             env_vars=VarDiff(added={}, removed={}, changed={}, unchanged_count=0),
             os_info=None,
             paths=PathDiff(
-                sys_path_added=[], sys_path_removed=[],
-                path_env_added=[], path_env_removed=[],
+                sys_path_added=[],
+                sys_path_removed=[],
+                path_env_added=[],
+                path_env_removed=[],
             ),
-            config_files=ConfigDiff(added=[], removed=[], changed={}, unchanged_count=0),
+            config_files=ConfigDiff(
+                added=[], removed=[], changed={}, unchanged_count=0
+            ),
             summary=DiffSummary(
                 total_differences=1, severity="major", breaking_changes=[]
             ),

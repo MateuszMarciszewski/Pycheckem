@@ -83,7 +83,9 @@ class TestSnapshotRemote:
         mock_result.stdout = json_output
         mock_result.stderr = ""
 
-        with patch("pycheckem.remote.subprocess.run", return_value=mock_result) as mock_run:
+        with patch(
+            "pycheckem.remote.subprocess.run", return_value=mock_result
+        ) as mock_run:
             result = snapshot_remote("user@host1", label="test")
 
         assert result.metadata.hostname == "remote-host"
@@ -101,7 +103,9 @@ class TestSnapshotRemote:
         mock_result.stdout = json_output
         mock_result.stderr = ""
 
-        with patch("pycheckem.remote.subprocess.run", return_value=mock_result) as mock_run:
+        with patch(
+            "pycheckem.remote.subprocess.run", return_value=mock_result
+        ) as mock_run:
             snapshot_remote("host", label="prod")
 
         cmd = mock_run.call_args[0][0]
@@ -153,7 +157,9 @@ class TestSnapshotRemote:
         mock_result.stdout = json_output
         mock_result.stderr = ""
 
-        with patch("pycheckem.remote.subprocess.run", return_value=mock_result) as mock_run:
+        with patch(
+            "pycheckem.remote.subprocess.run", return_value=mock_result
+        ) as mock_run:
             snapshot_remote("host", timeout=60)
 
         assert mock_run.call_args[1]["timeout"] == 60
