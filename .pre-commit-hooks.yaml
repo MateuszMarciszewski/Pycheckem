@@ -1,0 +1,9 @@
+- id: pycheckem-guard
+  name: pycheckem environment guard
+  description: Check that the current environment matches a baseline snapshot
+  entry: pycheckem guard
+  language: python
+  types: [text]
+  pass_filenames: false
+  additional_dependencies: ["pycheckem"]
+  args: ["baseline.json"]

@@ -147,6 +147,29 @@ pycheckem compare prod.json
 pycheckem compare baseline.json --exit-code --fail-severity major
 ```
 
+### `pycheckem guard`
+
+CI gate — snapshot the current environment and fail if it has drifted from a baseline. Like `compare`, but `--exit-code` is always on.
+
+```bash
+pycheckem guard baseline.json                          # fail on any drift
+pycheckem guard baseline.json --fail-severity major    # fail only on major+
+pycheckem guard baseline.json --format json            # machine-readable
+pycheckem guard baseline.json --ignore-packages pip,setuptools
+```
+
+### `pycheckem verify`
+
+Check installed packages against a requirements file or pyproject.toml. Reports missing, extra, and version-mismatched packages.
+
+```bash
+pycheckem verify requirements.txt                    # check deps
+pycheckem verify pyproject.toml                      # works with pyproject.toml too
+pycheckem verify requirements.txt --include-extras   # also show undeclared packages
+pycheckem verify requirements.txt --exit-code        # fail if deps aren't satisfied
+pycheckem verify requirements.txt --format json      # machine-readable
+```
+
 ### `pycheckem history`
 
 Track environment snapshots over time.
@@ -262,6 +285,48 @@ The collector function receives no arguments and returns a dict. Plugin data is 
 ## GitHub Actions
 
 See [docs/github-actions.md](docs/github-actions.md) for a complete CI integration guide with baseline management, suppression rules, and PR comment examples.
+
+## pytest Integration
+
+pycheckem includes a pytest plugin. Verify your environment as part of your test suite:
+
+```bash
+pytest --check-env requirements.txt
+pytest --check-env pyproject.toml
+```
+
+Or configure it permanently in `pyproject.toml`:
+
+```toml
+[tool.pytest.ini_options]
+addopts = "--check-env=requirements.txt"
+```
+
+The environment check runs as the first test. If dependencies are missing or mismatched, you get a clear failure before any other tests run.
+
+## Pre-commit Hook
+
+Add pycheckem as a pre-commit hook:
+
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/MateuszMarciszewski/Pycheckem
+    rev: v0.4.0
+    hooks:
+      - id: pycheckem-guard
+        args: ["baseline.json"]
+```
+
+## MCP Server
+
+For AI coding assistants (Claude Code, Cursor, Windsurf), install the MCP server:
+
+```bash
+pip install pycheckem-mcp
+```
+
+See [pycheckem-mcp/](pycheckem-mcp/) for configuration details.
 
 ## Installation Options
 

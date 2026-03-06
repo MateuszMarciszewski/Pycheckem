@@ -1,0 +1,36 @@
+# pycheckem
+
+> pycheckem snapshots Python runtime environments and produces structured
+> diffs to debug parity issues. It captures packages (with install sources
+> via PEP 610), Python version, OS details, environment variables, sys.path,
+> PATH, config file hashes, and project metadata — then compares any two
+> snapshots to show exactly what's different.
+
+## Quick Start
+
+- Install: `pip install pycheckem`
+- Snapshot: `pycheckem snapshot -o env.json --label prod`
+- Diff: `pycheckem diff staging.json prod.json`
+- Compare live vs saved: `pycheckem compare baseline.json`
+- Guard in CI: `pycheckem guard baseline.json --fail-severity major`
+- Verify deps: `pycheckem verify requirements.txt --exit-code`
+
+## Docs
+
+- [README](https://github.com/MateuszMarciszewski/Pycheckem#readme): Full CLI reference, Python API, and examples
+- [GitHub Actions Guide](https://github.com/MateuszMarciszewski/Pycheckem/blob/main/docs/github-actions.md): CI integration with baseline management
+- [CHANGELOG](https://github.com/MateuszMarciszewski/Pycheckem/blob/main/CHANGELOG.md): Version history
+- [CONTRIBUTING](https://github.com/MateuszMarciszewski/Pycheckem/blob/main/CONTRIBUTING.md): How to contribute
+
+## Key Features
+
+- Zero external dependencies (stdlib only)
+- Severity scoring: identical, minor, major, critical
+- CI gating with `--exit-code` and `--fail-severity`
+- PEP 610 install source detection (PyPI, editable, local, VCS, archive)
+- Diff suppression via pyproject.toml config or CLI flags
+- Four output formats: ascii, json, rich (color), side-by-side
+- Snapshot history tracking
+- Remote SSH snapshots
+- Plugin system for custom collectors
+- Dependency verification against requirements.txt and pyproject.toml

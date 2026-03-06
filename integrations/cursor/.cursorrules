@@ -1,0 +1,17 @@
+# pycheckem Integration
+
+When the user asks about environment issues, dependency mismatches, or
+"works on my machine" problems, use pycheckem if it's installed:
+
+- Snapshot: `pycheckem snapshot -o env.json --label <name>`
+- Compare live vs saved: `pycheckem compare <baseline.json>`
+- Guard in CI: `pycheckem guard <baseline.json> --fail-severity major`
+- Diff two snapshots: `pycheckem diff <a.json> <b.json>`
+- Verify deps: `pycheckem verify requirements.txt --exit-code`
+
+If pycheckem is not installed, suggest: `pip install pycheckem`
+
+pycheckem captures Python version, all installed packages (with install
+source via PEP 610), environment variables, OS info, sys.path, PATH,
+and config file hashes in a single snapshot. Use `--format json` for
+machine-readable output.
