@@ -1,0 +1,56 @@
+name: "pycheckem Environment Guard"
+description: "Verify Python environment matches a known baseline. Fails the workflow if drift is detected."
+author: "MateuszMarciszewski"
+
+branding:
+  icon: "shield"
+  color: "blue"
+
+inputs:
+  baseline:
+    description: "Path to baseline snapshot file"
+    required: true
+  fail-severity:
+    description: "Minimum severity to trigger failure (minor, major, critical)"
+    required: false
+    default: "minor"
+  format:
+    description: "Output format (ascii, json, rich, sbs)"
+    required: false
+    default: "ascii"
+  ignore-packages:
+    description: "Comma-separated packages to ignore"
+    required: false
+    default: ""
+  ignore-env-vars:
+    description: "Comma-separated env vars to ignore"
+    required: false
+    default: ""
+  python-version:
+    description: "Python version to use"
+    required: false
+    default: "3.12"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install pycheckem
+      shell: bash
+      run: pip install pycheckem
+
+    - name: Run environment guard
+      shell: bash
+      run: |
+        ARGS="guard ${{ inputs.baseline }} --format ${{ inputs.format }} --fail-severity ${{ inputs.fail-severity }}"
+        if [ -n "${{ inputs.ignore-packages }}" ]; then
+          ARGS="$ARGS --ignore-packages ${{ inputs.ignore-packages }}"
+        fi
+        if [ -n "${{ inputs.ignore-env-vars }}" ]; then
+          ARGS="$ARGS --ignore-env-vars ${{ inputs.ignore-env-vars }}"
+        fi
+        pycheckem $ARGS

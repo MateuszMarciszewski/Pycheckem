@@ -181,6 +181,32 @@ def main(argv=None):
         help="Comma-separated regex patterns to ignore in diff",
     )
 
+    # verify subcommand
+    verify_parser = subparsers.add_parser(
+        "verify",
+        help="Check installed packages against a requirements file or pyproject.toml",
+    )
+    verify_parser.add_argument(
+        "deps_file",
+        help="Path to requirements.txt or pyproject.toml",
+    )
+    verify_parser.add_argument(
+        "--include-extras",
+        action="store_true",
+        help="Report packages installed but not declared",
+    )
+    verify_parser.add_argument(
+        "--exit-code",
+        action="store_true",
+        help="Exit with non-zero status if verification fails",
+    )
+    verify_parser.add_argument(
+        "--format",
+        choices=["ascii", "json"],
+        default="ascii",
+        help="Output format (default: ascii)",
+    )
+
     # history subcommand
     history_parser = subparsers.add_parser(
         "history", help="Manage snapshot history"
@@ -378,6 +404,40 @@ def main(argv=None):
         # Guard always uses exit_code=True
         args.exit_code = True
         result = _diff_and_render(baseline, live, args)
+
+    elif args.command == "verify":
+        from pycheckem.verify import verify as do_verify, render_verify
+
+        deps_file = args.deps_file
+
+        # Auto-detect file type
+        try:
+            if deps_file.endswith(".toml"):
+                from pycheckem.parsers import parse_pyproject_deps
+                declared = parse_pyproject_deps(deps_file)
+            else:
+                from pycheckem.parsers import parse_requirements
+                declared = parse_requirements(deps_file)
+        except FileNotFoundError:
+            print(f"Error: file not found: {deps_file}", file=sys.stderr)
+            sys.exit(1)
+        except (ValueError, ImportError) as exc:
+            print(f"Error parsing {deps_file}: {exc}", file=sys.stderr)
+            sys.exit(1)
+
+        result = do_verify(declared, include_extras=args.include_extras)
+
+        if args.format == "json":
+            import json as _json
+            import dataclasses
+            data = dataclasses.asdict(result)
+            data["is_satisfied"] = result.is_satisfied
+            print(_json.dumps(data, indent=2))
+        else:
+            print(render_verify(result))
+
+        if args.exit_code and not result.is_satisfied:
+            sys.exit(1)
 
     elif args.command == "history":
         from pycheckem.history import add as hist_add, list_snapshots, get_last_n

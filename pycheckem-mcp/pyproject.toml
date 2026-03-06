@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pycheckem-mcp"
+version = "0.1.0"
+description = "MCP server for pycheckem — lets AI coding assistants snapshot and diff Python environments"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    { name = "marci" },
+]
+dependencies = [
+    "pycheckem>=0.3.0",
+    "fastmcp>=0.1.0",
+]
+keywords = [
+    "mcp",
+    "pycheckem",
+    "environment",
+    "diff",
+    "ai",
+    "coding-assistant",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Testing",
+]
+
+[project.scripts]
+pycheckem-mcp = "pycheckem_mcp.server:main"
+
+[project.urls]
+Homepage = "https://github.com/MateuszMarciszewski/Pycheckem"
+Repository = "https://github.com/MateuszMarciszewski/Pycheckem"
+"Bug Tracker" = "https://github.com/MateuszMarciszewski/Pycheckem/issues"
