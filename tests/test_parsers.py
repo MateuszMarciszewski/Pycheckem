@@ -156,7 +156,7 @@ class TestParsePyprojectDeps:
         f = tmp_path / "pyproject.toml"
         f.write_text(
             '[project]\nname = "myapp"\ndependencies = [\n'
-            '  "pywin32; sys_platform == \'win32\'",\n]\n'
+            "  \"pywin32; sys_platform == 'win32'\",\n]\n"
         )
         result = parse_pyproject_deps(str(f))
         assert "pywin32" in result
@@ -164,8 +164,7 @@ class TestParsePyprojectDeps:
     def test_names_normalized(self, tmp_path):
         f = tmp_path / "pyproject.toml"
         f.write_text(
-            '[project]\nname = "myapp"\ndependencies = [\n'
-            '  "My_Package>=1.0",\n]\n'
+            '[project]\nname = "myapp"\ndependencies = [\n  "My_Package>=1.0",\n]\n'
         )
         result = parse_pyproject_deps(str(f))
         assert "my-package" in result

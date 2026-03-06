@@ -4,7 +4,6 @@ from pycheckem.config import SuppressionConfig
 from pycheckem.diff import diff
 from pycheckem.suppression import apply_suppression
 from pycheckem.types import (
-    ConfigFileInfo,
     OSInfo,
     PackageInfo,
     PathInfo,
@@ -41,7 +40,9 @@ def _make_snapshot(**overrides):
             "HOSTNAME": "abc123",
             "LOG_LEVEL": "DEBUG",
         },
-        os_info=OSInfo(system="Linux", release="6.1.0", machine="x86_64", distro="Ubuntu 22.04"),
+        os_info=OSInfo(
+            system="Linux", release="6.1.0", machine="x86_64", distro="Ubuntu 22.04"
+        ),
         paths=PathInfo(sys_path=["/usr/lib/python3"], path_env=["/usr/bin"]),
         config_files={},
     )
@@ -53,7 +54,9 @@ class TestSuppressionPackages:
     def test_ignore_package_by_name(self):
         snap_a = _make_snapshot()
         snap_b = _make_snapshot(
-            metadata=SnapshotMetadata("2026-03-02T12:00:00Z", "host-b", "env-b", "0.1.0"),
+            metadata=SnapshotMetadata(
+                "2026-03-02T12:00:00Z", "host-b", "env-b", "0.1.0"
+            ),
             packages={
                 "requests": PackageInfo(version="2.31.0", location="/sp", requires=[]),
                 "flask": PackageInfo(version="3.0.0", location="/sp", requires=[]),
@@ -75,7 +78,9 @@ class TestSuppressionPackages:
     def test_ignore_package_added(self):
         snap_a = _make_snapshot()
         snap_b = _make_snapshot(
-            metadata=SnapshotMetadata("2026-03-02T12:00:00Z", "host-b", "env-b", "0.1.0"),
+            metadata=SnapshotMetadata(
+                "2026-03-02T12:00:00Z", "host-b", "env-b", "0.1.0"
+            ),
             packages={
                 "requests": PackageInfo(version="2.31.0", location="/sp", requires=[]),
                 "flask": PackageInfo(version="3.0.0", location="/sp", requires=[]),
@@ -94,7 +99,9 @@ class TestSuppressionPackages:
     def test_ignore_package_removed(self):
         snap_a = _make_snapshot()
         snap_b = _make_snapshot(
-            metadata=SnapshotMetadata("2026-03-02T12:00:00Z", "host-b", "env-b", "0.1.0"),
+            metadata=SnapshotMetadata(
+                "2026-03-02T12:00:00Z", "host-b", "env-b", "0.1.0"
+            ),
             packages={
                 "requests": PackageInfo(version="2.31.0", location="/sp", requires=[]),
                 "flask": PackageInfo(version="3.0.0", location="/sp", requires=[]),
@@ -111,7 +118,9 @@ class TestSuppressionPackages:
     def test_case_insensitive_package_ignore(self):
         snap_a = _make_snapshot()
         snap_b = _make_snapshot(
-            metadata=SnapshotMetadata("2026-03-02T12:00:00Z", "host-b", "env-b", "0.1.0"),
+            metadata=SnapshotMetadata(
+                "2026-03-02T12:00:00Z", "host-b", "env-b", "0.1.0"
+            ),
             packages={
                 "requests": PackageInfo(version="2.31.0", location="/sp", requires=[]),
                 "flask": PackageInfo(version="3.0.0", location="/sp", requires=[]),
@@ -130,7 +139,9 @@ class TestSuppressionEnvVars:
     def test_ignore_env_var_by_name(self):
         snap_a = _make_snapshot()
         snap_b = _make_snapshot(
-            metadata=SnapshotMetadata("2026-03-02T12:00:00Z", "host-b", "env-b", "0.1.0"),
+            metadata=SnapshotMetadata(
+                "2026-03-02T12:00:00Z", "host-b", "env-b", "0.1.0"
+            ),
             env_vars={
                 "PATH": "/usr/bin",
                 "HOME": "/home/dev",
@@ -148,7 +159,9 @@ class TestSuppressionEnvVars:
     def test_ignore_env_var_added(self):
         snap_a = _make_snapshot()
         snap_b = _make_snapshot(
-            metadata=SnapshotMetadata("2026-03-02T12:00:00Z", "host-b", "env-b", "0.1.0"),
+            metadata=SnapshotMetadata(
+                "2026-03-02T12:00:00Z", "host-b", "env-b", "0.1.0"
+            ),
             env_vars={
                 "PATH": "/usr/bin",
                 "HOME": "/home/dev",
@@ -168,7 +181,9 @@ class TestSuppressionPatterns:
     def test_pattern_matches_package(self):
         snap_a = _make_snapshot()
         snap_b = _make_snapshot(
-            metadata=SnapshotMetadata("2026-03-02T12:00:00Z", "host-b", "env-b", "0.1.0"),
+            metadata=SnapshotMetadata(
+                "2026-03-02T12:00:00Z", "host-b", "env-b", "0.1.0"
+            ),
             packages={
                 "requests": PackageInfo(version="2.31.0", location="/sp", requires=[]),
                 "flask": PackageInfo(version="3.0.0", location="/sp", requires=[]),
@@ -187,7 +202,9 @@ class TestSuppressionPatterns:
     def test_pattern_matches_env_var(self):
         snap_a = _make_snapshot()
         snap_b = _make_snapshot(
-            metadata=SnapshotMetadata("2026-03-02T12:00:00Z", "host-b", "env-b", "0.1.0"),
+            metadata=SnapshotMetadata(
+                "2026-03-02T12:00:00Z", "host-b", "env-b", "0.1.0"
+            ),
             env_vars={
                 "PATH": "/usr/bin",
                 "HOME": "/home/dev",
@@ -205,7 +222,9 @@ class TestSuppressionPatterns:
     def test_invalid_pattern_is_skipped(self):
         snap_a = _make_snapshot()
         snap_b = _make_snapshot(
-            metadata=SnapshotMetadata("2026-03-02T12:00:00Z", "host-b", "env-b", "0.1.0"),
+            metadata=SnapshotMetadata(
+                "2026-03-02T12:00:00Z", "host-b", "env-b", "0.1.0"
+            ),
             packages={
                 "requests": PackageInfo(version="2.31.0", location="/sp", requires=[]),
                 "flask": PackageInfo(version="3.0.0", location="/sp", requires=[]),
@@ -226,7 +245,9 @@ class TestSuppressionSeverityRecomputation:
         """Suppressing a downgraded package should reduce severity from major."""
         snap_a = _make_snapshot()
         snap_b = _make_snapshot(
-            metadata=SnapshotMetadata("2026-03-02T12:00:00Z", "host-b", "env-b", "0.1.0"),
+            metadata=SnapshotMetadata(
+                "2026-03-02T12:00:00Z", "host-b", "env-b", "0.1.0"
+            ),
             packages={
                 "requests": PackageInfo(version="2.28.0", location="/sp", requires=[]),
                 "flask": PackageInfo(version="3.0.0", location="/sp", requires=[]),
@@ -244,7 +265,9 @@ class TestSuppressionSeverityRecomputation:
     def test_no_suppression_returns_same_result(self):
         snap_a = _make_snapshot()
         snap_b = _make_snapshot(
-            metadata=SnapshotMetadata("2026-03-02T12:00:00Z", "host-b", "env-b", "0.1.0"),
+            metadata=SnapshotMetadata(
+                "2026-03-02T12:00:00Z", "host-b", "env-b", "0.1.0"
+            ),
         )
         result = diff(snap_a, snap_b)
         config = SuppressionConfig()
@@ -255,7 +278,9 @@ class TestSuppressionSeverityRecomputation:
     def test_total_differences_updated(self):
         snap_a = _make_snapshot()
         snap_b = _make_snapshot(
-            metadata=SnapshotMetadata("2026-03-02T12:00:00Z", "host-b", "env-b", "0.1.0"),
+            metadata=SnapshotMetadata(
+                "2026-03-02T12:00:00Z", "host-b", "env-b", "0.1.0"
+            ),
             packages={
                 "requests": PackageInfo(version="2.31.0", location="/sp", requires=[]),
                 "flask": PackageInfo(version="3.0.0", location="/sp", requires=[]),
@@ -274,7 +299,9 @@ class TestSuppressionSeverityRecomputation:
         """Suppressing a downgraded package should remove it from breaking_changes."""
         snap_a = _make_snapshot()
         snap_b = _make_snapshot(
-            metadata=SnapshotMetadata("2026-03-02T12:00:00Z", "host-b", "env-b", "0.1.0"),
+            metadata=SnapshotMetadata(
+                "2026-03-02T12:00:00Z", "host-b", "env-b", "0.1.0"
+            ),
             packages={
                 "requests": PackageInfo(version="2.28.0", location="/sp", requires=[]),
                 "flask": PackageInfo(version="3.0.0", location="/sp", requires=[]),

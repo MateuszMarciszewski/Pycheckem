@@ -1,6 +1,4 @@
 import hashlib
-import os
-import tempfile
 
 from pycheckem.collectors.config_files import collect_config_file
 from pycheckem.types import ConfigFileInfo
@@ -33,7 +31,9 @@ class TestCollectConfigFile:
 
     def test_env_file_key_extraction(self, tmp_path):
         f = tmp_path / ".env"
-        f.write_text("DATABASE_URL=postgres://localhost\nLOG_LEVEL=DEBUG\n# comment\nAPI_HOST=0.0.0.0\n")
+        f.write_text(
+            "DATABASE_URL=postgres://localhost\nLOG_LEVEL=DEBUG\n# comment\nAPI_HOST=0.0.0.0\n"
+        )
         result = collect_config_file(str(f))
         assert result.keys is not None
         assert "API_HOST" in result.keys

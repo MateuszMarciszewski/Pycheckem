@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from pycheckem.verify import (
     verify,
@@ -73,10 +73,12 @@ def _mock_packages(pkg_dict):
 class TestVerify:
     @patch("pycheckem.verify.collect_packages")
     def test_all_satisfied(self, mock_collect):
-        mock_collect.return_value = _mock_packages({
-            "requests": "2.31.0",
-            "flask": "2.3.0",
-        })
+        mock_collect.return_value = _mock_packages(
+            {
+                "requests": "2.31.0",
+                "flask": "2.3.0",
+            }
+        )
         declared = {"requests": "==2.31.0", "flask": ">=2.0"}
         result = verify(declared)
         assert result.is_satisfied
@@ -111,20 +113,24 @@ class TestVerify:
 
     @patch("pycheckem.verify.collect_packages")
     def test_include_extras(self, mock_collect):
-        mock_collect.return_value = _mock_packages({
-            "requests": "2.31.0",
-            "debugpy": "1.8.0",
-        })
+        mock_collect.return_value = _mock_packages(
+            {
+                "requests": "2.31.0",
+                "debugpy": "1.8.0",
+            }
+        )
         declared = {"requests": "==2.31.0"}
         result = verify(declared, include_extras=True)
         assert "debugpy" in result.extra
 
     @patch("pycheckem.verify.collect_packages")
     def test_no_extras_by_default(self, mock_collect):
-        mock_collect.return_value = _mock_packages({
-            "requests": "2.31.0",
-            "debugpy": "1.8.0",
-        })
+        mock_collect.return_value = _mock_packages(
+            {
+                "requests": "2.31.0",
+                "debugpy": "1.8.0",
+            }
+        )
         declared = {"requests": "==2.31.0"}
         result = verify(declared, include_extras=False)
         assert result.extra == []
@@ -141,16 +147,24 @@ class TestVerify:
 class TestRenderVerify:
     def test_all_satisfied(self):
         result = VerifyResult(
-            missing=[], extra=[], version_mismatches={},
-            satisfied=["flask", "requests"], total_declared=2, total_installed=10,
+            missing=[],
+            extra=[],
+            version_mismatches={},
+            satisfied=["flask", "requests"],
+            total_declared=2,
+            total_installed=10,
         )
         output = render_verify(result)
         assert "All 2 declared dependencies are satisfied" in output
 
     def test_missing_shown(self):
         result = VerifyResult(
-            missing=["pandas"], extra=[], version_mismatches={},
-            satisfied=["flask"], total_declared=2, total_installed=10,
+            missing=["pandas"],
+            extra=[],
+            version_mismatches={},
+            satisfied=["flask"],
+            total_declared=2,
+            total_installed=10,
         )
         output = render_verify(result)
         assert "Missing (1)" in output
@@ -159,9 +173,12 @@ class TestRenderVerify:
 
     def test_mismatch_shown(self):
         result = VerifyResult(
-            missing=[], extra=[],
+            missing=[],
+            extra=[],
             version_mismatches={"requests": VersionMismatch("2.28.0", "==2.31.0")},
-            satisfied=["flask"], total_declared=2, total_installed=10,
+            satisfied=["flask"],
+            total_declared=2,
+            total_installed=10,
         )
         output = render_verify(result)
         assert "Version Mismatches (1)" in output
@@ -171,8 +188,12 @@ class TestRenderVerify:
 
     def test_extras_shown(self):
         result = VerifyResult(
-            missing=[], extra=["debugpy"], version_mismatches={},
-            satisfied=["flask"], total_declared=1, total_installed=10,
+            missing=[],
+            extra=["debugpy"],
+            version_mismatches={},
+            satisfied=["flask"],
+            total_declared=1,
+            total_installed=10,
         )
         output = render_verify(result)
         assert "Extra (1)" in output

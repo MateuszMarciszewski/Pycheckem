@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json as _json
 from importlib.metadata import distributions
-from typing import Tuple, Optional
 
 from pycheckem.types import PackageInfo
 

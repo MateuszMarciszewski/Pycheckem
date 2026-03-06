@@ -1,16 +1,12 @@
 from __future__ import annotations
 
-import os
 import sys
 
-from unittest.mock import patch
 
 from pycheckem.collectors.project import (
     collect_project_info,
-    _parse_pyproject_toml,
     _parse_setup_cfg,
 )
-from pycheckem.types import ProjectInfo
 
 
 class TestCollectProjectInfoPyprojectToml:
@@ -20,13 +16,14 @@ class TestCollectProjectInfoPyprojectToml:
                 import tomli  # noqa: F401
             except ImportError:
                 import pytest
+
                 pytest.skip("tomli not available on Python < 3.11")
 
     def test_reads_pyproject_toml(self, tmp_path):
         self._skip_if_no_toml()
         toml = tmp_path / "pyproject.toml"
         toml.write_text(
-            '[project]\n'
+            "[project]\n"
             'name = "myapp"\n'
             'version = "1.2.0"\n'
             'requires-python = ">=3.10"\n'
@@ -43,17 +40,14 @@ class TestCollectProjectInfoPyprojectToml:
     def test_pyproject_no_project_section(self, tmp_path):
         self._skip_if_no_toml()
         toml = tmp_path / "pyproject.toml"
-        toml.write_text('[tool.ruff]\nline-length = 88\n')
+        toml.write_text("[tool.ruff]\nline-length = 88\n")
         result = collect_project_info(str(tmp_path))
         assert result is None
 
     def test_pyproject_partial_fields(self, tmp_path):
         self._skip_if_no_toml()
         toml = tmp_path / "pyproject.toml"
-        toml.write_text(
-            '[project]\n'
-            'name = "myapp"\n'
-        )
+        toml.write_text('[project]\nname = "myapp"\n')
         result = collect_project_info(str(tmp_path))
         assert result is not None
         assert result.name == "myapp"
@@ -114,14 +108,11 @@ class TestCollectProjectInfoFallback:
                 import tomli  # noqa: F401
             except ImportError:
                 import pytest
+
                 pytest.skip("tomli not available on Python < 3.11")
 
         toml = tmp_path / "pyproject.toml"
-        toml.write_text(
-            '[project]\n'
-            'name = "from-toml"\n'
-            'version = "1.0.0"\n'
-        )
+        toml.write_text('[project]\nname = "from-toml"\nversion = "1.0.0"\n')
         cfg = tmp_path / "setup.cfg"
         cfg.write_text("[metadata]\nname = from-cfg\nversion = 2.0.0\n")
 

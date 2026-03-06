@@ -1,18 +1,13 @@
 from __future__ import annotations
 
 import re
-from typing import Dict, List, Optional, Tuple
 
-from pycheckem.config import SuppressionConfig
 from pycheckem.diff import compute_severity, count_differences
 from pycheckem.types import (
-    ConfigDiff,
     DiffResult,
     DiffSummary,
     PackageDiff,
-    PathDiff,
     VarDiff,
-    VersionChange,
 )
 
 
@@ -50,20 +45,24 @@ def _filter_packages(pkg_diff, config):
     # type: (PackageDiff, SuppressionConfig) -> PackageDiff
     """Return a new PackageDiff with suppressed packages removed."""
     added = {
-        k: v for k, v in pkg_diff.added.items()
+        k: v
+        for k, v in pkg_diff.added.items()
         if not _should_suppress_package(k, config)
     }
     removed = {
-        k: v for k, v in pkg_diff.removed.items()
+        k: v
+        for k, v in pkg_diff.removed.items()
         if not _should_suppress_package(k, config)
     }
     changed = {
-        k: v for k, v in pkg_diff.changed.items()
+        k: v
+        for k, v in pkg_diff.changed.items()
         if not _should_suppress_package(k, config)
     }
     orig_source_changed = getattr(pkg_diff, "source_changed", {})
     source_changed = {
-        k: v for k, v in orig_source_changed.items()
+        k: v
+        for k, v in orig_source_changed.items()
         if not _should_suppress_package(k, config)
     }
     suppressed_count = (
@@ -85,15 +84,18 @@ def _filter_env_vars(env_diff, config):
     # type: (VarDiff, SuppressionConfig) -> VarDiff
     """Return a new VarDiff with suppressed env vars removed."""
     added = {
-        k: v for k, v in env_diff.added.items()
+        k: v
+        for k, v in env_diff.added.items()
         if not _should_suppress_env_var(k, config)
     }
     removed = {
-        k: v for k, v in env_diff.removed.items()
+        k: v
+        for k, v in env_diff.removed.items()
         if not _should_suppress_env_var(k, config)
     }
     changed = {
-        k: v for k, v in env_diff.changed.items()
+        k: v
+        for k, v in env_diff.changed.items()
         if not _should_suppress_env_var(k, config)
     }
     suppressed_count = (
@@ -115,9 +117,11 @@ def apply_suppression(result, config):
 
     Severity and counts are recomputed from scratch after filtering.
     """
-    if (not config.ignore_packages
-            and not config.ignore_env_vars
-            and not config.ignore_patterns):
+    if (
+        not config.ignore_packages
+        and not config.ignore_env_vars
+        and not config.ignore_patterns
+    ):
         return result
 
     packages = _filter_packages(result.packages, config)
@@ -126,12 +130,22 @@ def apply_suppression(result, config):
     # Recompute severity and counts with filtered data
     project = getattr(result, "project", None)
     total = count_differences(
-        result.python, packages, env_vars,
-        result.os_info, result.paths, result.config_files, project,
+        result.python,
+        packages,
+        env_vars,
+        result.os_info,
+        result.paths,
+        result.config_files,
+        project,
     )
     severity, breaking = compute_severity(
-        result.python, packages, env_vars,
-        result.os_info, result.paths, result.config_files, project,
+        result.python,
+        packages,
+        env_vars,
+        result.os_info,
+        result.paths,
+        result.config_files,
+        project,
     )
 
     return DiffResult(

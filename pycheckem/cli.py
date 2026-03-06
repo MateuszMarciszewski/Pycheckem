@@ -9,7 +9,7 @@ def main(argv=None):
         prog="pycheckem",
         description=(
             "Snapshot and diff Python runtime environments to debug "
-            "\"works on my machine\" parity issues across dev, staging, "
+            '"works on my machine" parity issues across dev, staging, '
             "prod, and containers."
         ),
     )
@@ -82,7 +82,9 @@ def main(argv=None):
         "compare",
         help="Snapshot current env and diff against a saved snapshot",
     )
-    compare_parser.add_argument("snapshot", help="Saved snapshot file to compare against")
+    compare_parser.add_argument(
+        "snapshot", help="Saved snapshot file to compare against"
+    )
     compare_parser.add_argument(
         "--format",
         choices=["ascii", "json", "rich", "side-by-side", "sbs"],
@@ -107,10 +109,15 @@ def main(argv=None):
         help="Minimum severity to trigger non-zero exit (default: minor)",
     )
     compare_parser.add_argument(
-        "--label", default=None, help="Label for the live snapshot",
+        "--label",
+        default=None,
+        help="Label for the live snapshot",
     )
     compare_parser.add_argument(
-        "--config-files", nargs="*", default=[], help="Config files to hash",
+        "--config-files",
+        nargs="*",
+        default=[],
+        help="Config files to hash",
     )
     compare_parser.add_argument(
         "--include-sensitive",
@@ -138,7 +145,9 @@ def main(argv=None):
         "guard",
         help="Check if current env matches a baseline (CI gate)",
     )
-    guard_parser.add_argument("baseline", help="Baseline snapshot file to guard against")
+    guard_parser.add_argument(
+        "baseline", help="Baseline snapshot file to guard against"
+    )
     guard_parser.add_argument(
         "--format",
         choices=["ascii", "json", "rich", "side-by-side", "sbs"],
@@ -158,10 +167,15 @@ def main(argv=None):
         help="Minimum severity to trigger failure (default: minor)",
     )
     guard_parser.add_argument(
-        "--label", default=None, help="Label for the live snapshot",
+        "--label",
+        default=None,
+        help="Label for the live snapshot",
     )
     guard_parser.add_argument(
-        "--config-files", nargs="*", default=[], help="Config files to hash",
+        "--config-files",
+        nargs="*",
+        default=[],
+        help="Config files to hash",
     )
     guard_parser.add_argument(
         "--include-sensitive",
@@ -169,15 +183,18 @@ def main(argv=None):
         help="Include sensitive environment variables",
     )
     guard_parser.add_argument(
-        "--ignore-packages", default=None,
+        "--ignore-packages",
+        default=None,
         help="Comma-separated packages to ignore in diff",
     )
     guard_parser.add_argument(
-        "--ignore-env-vars", default=None,
+        "--ignore-env-vars",
+        default=None,
         help="Comma-separated env vars to ignore in diff",
     )
     guard_parser.add_argument(
-        "--ignore-patterns", default=None,
+        "--ignore-patterns",
+        default=None,
         help="Comma-separated regex patterns to ignore in diff",
     )
 
@@ -208,25 +225,23 @@ def main(argv=None):
     )
 
     # history subcommand
-    history_parser = subparsers.add_parser(
-        "history", help="Manage snapshot history"
-    )
-    history_sub = history_parser.add_subparsers(
-        dest="history_action", metavar="ACTION"
-    )
+    history_parser = subparsers.add_parser("history", help="Manage snapshot history")
+    history_sub = history_parser.add_subparsers(dest="history_action", metavar="ACTION")
 
     # history add
     hist_add = history_sub.add_parser("add", help="Add a snapshot to history")
     hist_add.add_argument("snapshot_file", help="Snapshot file to add")
     hist_add.add_argument(
-        "--dir", default=None,
+        "--dir",
+        default=None,
         help="Base directory for history store (default: cwd)",
     )
 
     # history show
     hist_show = history_sub.add_parser("show", help="List snapshots in history")
     hist_show.add_argument(
-        "--dir", default=None,
+        "--dir",
+        default=None,
         help="Base directory for history store (default: cwd)",
     )
 
@@ -235,7 +250,9 @@ def main(argv=None):
         "diff", help="Diff the last N snapshots from history"
     )
     hist_diff.add_argument(
-        "--last", type=int, default=2,
+        "--last",
+        type=int,
+        default=2,
         help="Number of recent snapshots to diff (default: 2)",
     )
     hist_diff.add_argument(
@@ -262,19 +279,23 @@ def main(argv=None):
         help="Minimum severity to trigger non-zero exit (default: minor)",
     )
     hist_diff.add_argument(
-        "--ignore-packages", default=None,
+        "--ignore-packages",
+        default=None,
         help="Comma-separated packages to ignore in diff",
     )
     hist_diff.add_argument(
-        "--ignore-env-vars", default=None,
+        "--ignore-env-vars",
+        default=None,
         help="Comma-separated env vars to ignore in diff",
     )
     hist_diff.add_argument(
-        "--ignore-patterns", default=None,
+        "--ignore-patterns",
+        default=None,
         help="Comma-separated regex patterns to ignore in diff",
     )
     hist_diff.add_argument(
-        "--dir", default=None,
+        "--dir",
+        default=None,
         help="Base directory for history store (default: cwd)",
     )
 
@@ -284,7 +305,9 @@ def main(argv=None):
         help="Snapshot remote host(s) via SSH and diff",
     )
     remote_parser.add_argument(
-        "hosts", nargs="+", metavar="HOST",
+        "hosts",
+        nargs="+",
+        metavar="HOST",
         help="SSH host(s) to snapshot (1 = diff vs local, 2 = diff both)",
     )
     remote_parser.add_argument(
@@ -311,23 +334,29 @@ def main(argv=None):
         help="Minimum severity to trigger non-zero exit (default: minor)",
     )
     remote_parser.add_argument(
-        "--label", default=None,
+        "--label",
+        default=None,
         help="Label for the local snapshot (when using 1 host)",
     )
     remote_parser.add_argument(
-        "--timeout", type=int, default=30,
+        "--timeout",
+        type=int,
+        default=30,
         help="SSH timeout in seconds (default: 30)",
     )
     remote_parser.add_argument(
-        "--ignore-packages", default=None,
+        "--ignore-packages",
+        default=None,
         help="Comma-separated packages to ignore in diff",
     )
     remote_parser.add_argument(
-        "--ignore-env-vars", default=None,
+        "--ignore-env-vars",
+        default=None,
         help="Comma-separated env vars to ignore in diff",
     )
     remote_parser.add_argument(
-        "--ignore-patterns", default=None,
+        "--ignore-patterns",
+        default=None,
         help="Comma-separated regex patterns to ignore in diff",
     )
 
@@ -363,14 +392,12 @@ def main(argv=None):
             print(f"Snapshot saved to {args.output}{label_msg}")
 
     elif args.command == "diff":
-        from pycheckem.snapshot import load
-
         snap_a = _load_snapshot(args.snapshot_a)
         snap_b = _load_snapshot(args.snapshot_b)
         result = _diff_and_render(snap_a, snap_b, args)
 
     elif args.command == "compare":
-        from pycheckem.snapshot import snapshot as take_snapshot, load
+        from pycheckem.snapshot import snapshot as take_snapshot
 
         saved = _load_snapshot(args.snapshot)
 
@@ -387,7 +414,7 @@ def main(argv=None):
         result = _diff_and_render(saved, live, args)
 
     elif args.command == "guard":
-        from pycheckem.snapshot import snapshot as take_snapshot, load
+        from pycheckem.snapshot import snapshot as take_snapshot
 
         baseline = _load_snapshot(args.baseline)
 
@@ -414,9 +441,11 @@ def main(argv=None):
         try:
             if deps_file.endswith(".toml"):
                 from pycheckem.parsers import parse_pyproject_deps
+
                 declared = parse_pyproject_deps(deps_file)
             else:
                 from pycheckem.parsers import parse_requirements
+
                 declared = parse_requirements(deps_file)
         except FileNotFoundError:
             print(f"Error: file not found: {deps_file}", file=sys.stderr)
@@ -430,6 +459,7 @@ def main(argv=None):
         if args.format == "json":
             import json as _json
             import dataclasses
+
             data = dataclasses.asdict(result)
             data["is_satisfied"] = result.is_satisfied
             print(_json.dumps(data, indent=2))
@@ -501,12 +531,8 @@ def main(argv=None):
                 result = _diff_and_render(remote_snap, local_snap, args)
             else:
                 # Diff two remote hosts
-                snap_a = snapshot_remote(
-                    hosts[0], label=hosts[0], timeout=args.timeout
-                )
-                snap_b = snapshot_remote(
-                    hosts[1], label=hosts[1], timeout=args.timeout
-                )
+                snap_a = snapshot_remote(hosts[0], label=hosts[0], timeout=args.timeout)
+                snap_b = snapshot_remote(hosts[1], label=hosts[1], timeout=args.timeout)
                 result = _diff_and_render(snap_a, snap_b, args)
         except RuntimeError as exc:
             print(f"Error: {exc}", file=sys.stderr)
@@ -580,15 +606,19 @@ def _diff_and_render(snap_a, snap_b, args):
     fmt = args.format
     if fmt == "json":
         from pycheckem.render.json import render_json
+
         print(render_json(result))
     elif fmt == "rich":
         from pycheckem.render.rich import render_rich
+
         print(render_rich(result, only=getattr(args, "only", None)))
     elif fmt in ("side-by-side", "sbs"):
         from pycheckem.render.side_by_side import render_side_by_side
+
         print(render_side_by_side(result, only=getattr(args, "only", None)))
     else:
         from pycheckem.render.ascii import render_ascii
+
         print(render_ascii(result, only=getattr(args, "only", None)))
 
     if args.exit_code:

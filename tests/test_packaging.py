@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import configparser
 import os
 
 try:
@@ -24,7 +23,6 @@ class TestPyprojectToml:
     def test_pyproject_is_valid_toml(self):
         if tomllib is None:
             # On Python 3.8-3.10 without tomli, skip gracefully
-            import json
             # At minimum, verify the file is non-empty and starts with [
             with open(PYPROJECT_PATH, "r", encoding="utf-8") as f:
                 content = f.read()
@@ -47,6 +45,7 @@ class TestPyprojectToml:
         if tomllib is None:
             return
         from pycheckem.version import __version__
+
         with open(PYPROJECT_PATH, "rb") as f:
             data = tomllib.load(f)
         assert data["project"]["version"] == __version__
@@ -122,6 +121,7 @@ class TestPyprojectToml:
 class TestPackageMetadata:
     def test_version_matches_pyproject(self):
         from pycheckem.version import __version__
+
         if tomllib is None:
             return
         with open(PYPROJECT_PATH, "rb") as f:
@@ -130,6 +130,7 @@ class TestPackageMetadata:
 
     def test_importable_package(self):
         import pycheckem
+
         assert hasattr(pycheckem, "__version__")
         assert hasattr(pycheckem, "snapshot")
         assert hasattr(pycheckem, "diff")

@@ -66,6 +66,17 @@ class ProjectInfo:
 
 
 @dataclass
+class NativeLibInfo:
+    """Shared library dependency info for a compiled Python extension."""
+
+    extension: (
+        str  # e.g. "numpy/core/_multiarray_umath.cpython-311-x86_64-linux-gnu.so"
+    )
+    linked_libs: List[str]  # e.g. ["libopenblas.so.0", "libm.so.6", "libc.so.6"]
+    missing: List[str]  # libs that ldd/otool reported as "not found"
+
+
+@dataclass
 class Snapshot:
     metadata: SnapshotMetadata
     python: PythonInfo
@@ -76,6 +87,9 @@ class Snapshot:
     config_files: Dict[str, ConfigFileInfo] = field(default_factory=dict)
     project: Optional[ProjectInfo] = None
     plugins: Dict[str, Dict] = field(default_factory=dict)
+    native_libs: Dict[str, List[NativeLibInfo]] = field(
+        default_factory=dict
+    )  # package name -> extension deps
 
 
 # ---------------------------------------------------------------------------
@@ -164,6 +178,22 @@ class ProjectDiff:
 
 
 @dataclass
+class NativeLibDiff:
+    """Diff of native library dependencies between two snapshots."""
+
+    # Packages that have native libs in B but not A
+    packages_added: List[str]
+    # Packages that have native libs in A but not B
+    packages_removed: List[str]
+    # Per-package: libs that appeared or disappeared
+    libs_added: Dict[str, List[str]]  # pkg -> list of new linked libs
+    libs_removed: Dict[str, List[str]]  # pkg -> list of removed linked libs
+    # Libs reported missing in each snapshot
+    missing_in_a: Dict[str, List[str]]  # pkg -> missing libs in A
+    missing_in_b: Dict[str, List[str]]  # pkg -> missing libs in B
+
+
+@dataclass
 class DiffSummary:
     total_differences: int
     severity: str  # "identical", "minor", "major", "critical"
@@ -181,4 +211,7 @@ class DiffResult:
     paths: PathDiff
     config_files: ConfigDiff
     project: Optional[ProjectDiff] = None
-    summary: DiffSummary = field(default_factory=lambda: DiffSummary(0, "identical", []))
+    native_libs: Optional[NativeLibDiff] = None
+    summary: DiffSummary = field(
+        default_factory=lambda: DiffSummary(0, "identical", [])
+    )

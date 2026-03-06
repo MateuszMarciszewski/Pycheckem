@@ -8,8 +8,8 @@ environment. Reports missing, extra, and version-mismatched packages.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from dataclasses import dataclass
+from typing import Dict, List
 
 from pycheckem.collectors.packages import collect_packages
 from pycheckem.parsers import _normalize_name
@@ -18,6 +18,7 @@ from pycheckem.parsers import _normalize_name
 @dataclass
 class VerifyResult:
     """Result of verifying installed packages against declared dependencies."""
+
     missing: List[str]
     extra: List[str]
     version_mismatches: Dict[str, "VersionMismatch"]
@@ -35,6 +36,7 @@ class VerifyResult:
 @dataclass
 class VersionMismatch:
     """A package is installed but doesn't match the declared version spec."""
+
     installed: str
     declared: str
 
@@ -189,9 +191,9 @@ def render_verify(result):
     lines = []  # type: List[str]
 
     if result.is_satisfied and not result.extra:
-        lines.append("All {} declared dependencies are satisfied.".format(
-            result.total_declared
-        ))
+        lines.append(
+            "All {} declared dependencies are satisfied.".format(result.total_declared)
+        )
         return "\n".join(lines)
 
     lines.append("pycheckem verify")
@@ -207,9 +209,11 @@ def render_verify(result):
         lines.append("")
         lines.append("Version Mismatches ({})".format(len(result.version_mismatches)))
         for name, mm in sorted(result.version_mismatches.items()):
-            lines.append("  ~ {} installed={} declared={}".format(
-                name, mm.installed, mm.declared
-            ))
+            lines.append(
+                "  ~ {} installed={} declared={}".format(
+                    name, mm.installed, mm.declared
+                )
+            )
 
     if result.extra:
         lines.append("")
@@ -222,8 +226,10 @@ def render_verify(result):
     satisfied_count = len(result.satisfied)
     total = result.total_declared
     status = "PASS" if result.is_satisfied else "FAIL"
-    lines.append("{}: {}/{} declared dependencies satisfied".format(
-        status, satisfied_count, total
-    ))
+    lines.append(
+        "{}: {}/{} declared dependencies satisfied".format(
+            status, satisfied_count, total
+        )
+    )
 
     return "\n".join(lines)

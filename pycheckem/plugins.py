@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import sys
 from importlib.metadata import entry_points
-from typing import Any, Callable, Dict
 
 
 def discover_plugins():
@@ -22,8 +20,7 @@ def discover_plugins():
         group_eps = eps.get("pycheckem.collectors", [])
     else:
         group_eps = [
-            ep for ep in eps
-            if getattr(ep, "group", None) == "pycheckem.collectors"
+            ep for ep in eps if getattr(ep, "group", None) == "pycheckem.collectors"
         ]
 
     plugins = {}  # type: Dict[str, Callable]

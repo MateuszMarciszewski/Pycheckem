@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
 import subprocess
 import sys
 
@@ -46,9 +45,14 @@ class TestCLISnapshot:
         outfile = str(tmp_path / "snap.json")
         result = subprocess.run(
             [
-                sys.executable, "-m", "pycheckem", "snapshot",
-                "-o", outfile,
-                "--label", "staging",
+                sys.executable,
+                "-m",
+                "pycheckem",
+                "snapshot",
+                "-o",
+                outfile,
+                "--label",
+                "staging",
             ],
             capture_output=True,
             text=True,
@@ -64,9 +68,14 @@ class TestCLISnapshot:
         outfile = str(tmp_path / "snap.json")
         subprocess.run(
             [
-                sys.executable, "-m", "pycheckem", "snapshot",
-                "-o", outfile,
-                "--config-files", str(cfg),
+                sys.executable,
+                "-m",
+                "pycheckem",
+                "snapshot",
+                "-o",
+                outfile,
+                "--config-files",
+                str(cfg),
             ],
             capture_output=True,
             text=True,

@@ -1,5 +1,6 @@
 from .config_files import collect_config_file
 from .env_vars import collect_env_vars
+from .native_libs import collect_native_libs
 from .os_info import collect_os_info
 from .packages import collect_packages
 from .paths import collect_paths
@@ -14,4 +15,5 @@ __all__ = [
     "collect_paths",
     "collect_config_file",
     "collect_project_info",
+    "collect_native_libs",
 ]

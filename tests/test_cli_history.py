@@ -4,9 +4,8 @@ import os
 import subprocess
 import sys
 
-import pytest
 
-from pycheckem.history import add as hist_add, _history_dir
+from pycheckem.history import add as hist_add
 from pycheckem.snapshot import save
 from pycheckem.types import (
     OSInfo,
@@ -96,9 +95,7 @@ class TestCliHistoryDiff:
             save(snap, snap_path)
             hist_add(snap_path, base_dir=str(tmp_path))
 
-        rc, out, err = _run_cli(
-            "history", "diff", "--last", "2", cwd=str(tmp_path)
-        )
+        rc, out, err = _run_cli("history", "diff", "--last", "2", cwd=str(tmp_path))
         assert rc == 0
         assert "first" in out or "second" in out
 
@@ -108,9 +105,7 @@ class TestCliHistoryDiff:
         save(snap, snap_path)
         hist_add(snap_path, base_dir=str(tmp_path))
 
-        rc, out, err = _run_cli(
-            "history", "diff", "--last", "2", cwd=str(tmp_path)
-        )
+        rc, out, err = _run_cli("history", "diff", "--last", "2", cwd=str(tmp_path))
         assert rc == 1
         assert "need at least 2" in err.lower()
 

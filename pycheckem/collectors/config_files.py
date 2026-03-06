@@ -12,16 +12,11 @@ def _extract_keys(path: str, text: str) -> Optional[List[str]]:
     if basename == ".env" or path.endswith(".env"):
         return sorted(
             m.group(1)
-            for m in re.finditer(
-                r"^([A-Za-z_][A-Za-z0-9_]*)=", text, re.MULTILINE
-            )
+            for m in re.finditer(r"^([A-Za-z_][A-Za-z0-9_]*)=", text, re.MULTILINE)
         )
 
     if path.endswith(".ini") or path.endswith(".cfg"):
-        return [
-            m.group(1)
-            for m in re.finditer(r"^\[([^\]]+)\]", text, re.MULTILINE)
-        ]
+        return [m.group(1) for m in re.finditer(r"^\[([^\]]+)\]", text, re.MULTILINE)]
 
     return None
 

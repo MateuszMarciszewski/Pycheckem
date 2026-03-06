@@ -3,7 +3,7 @@ from __future__ import annotations
 from unittest.mock import patch
 
 from pycheckem.diff import diff
-from pycheckem.render.rich import _RICH_AVAILABLE, render_rich
+from pycheckem.render.rich import render_rich
 from pycheckem.types import (
     OSInfo,
     PackageInfo,
@@ -30,11 +30,17 @@ def _make_snapshot(**overrides):
             platform="linux",
         ),
         packages={
-            "requests": PackageInfo(version="2.31.0", location="/sp", requires=["urllib3"]),
-            "flask": PackageInfo(version="3.0.0", location="/sp", requires=["werkzeug"]),
+            "requests": PackageInfo(
+                version="2.31.0", location="/sp", requires=["urllib3"]
+            ),
+            "flask": PackageInfo(
+                version="3.0.0", location="/sp", requires=["werkzeug"]
+            ),
         },
         env_vars={"PATH": "/usr/bin", "HOME": "/home/dev", "LOG_LEVEL": "DEBUG"},
-        os_info=OSInfo(system="Linux", release="6.1.0", machine="x86_64", distro="Ubuntu 22.04"),
+        os_info=OSInfo(
+            system="Linux", release="6.1.0", machine="x86_64", distro="Ubuntu 22.04"
+        ),
         paths=PathInfo(sys_path=["/usr/lib/python3"], path_env=["/usr/bin"]),
         config_files={},
     )
@@ -160,6 +166,7 @@ class TestRichFallback:
             output = render_rich(result)
 
         from pycheckem.render.ascii import render_ascii
+
         expected = render_ascii(result)
         assert output == expected
 
@@ -180,6 +187,7 @@ class TestRichFallback:
             output = render_rich(result)
 
         from pycheckem.render.ascii import render_ascii
+
         expected = render_ascii(result)
         assert output == expected
 
@@ -200,5 +208,6 @@ class TestRichFallback:
             output = render_rich(result, only="packages")
 
         from pycheckem.render.ascii import render_ascii
+
         expected = render_ascii(result, only="packages")
         assert output == expected

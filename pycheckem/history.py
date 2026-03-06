@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import os
 import shutil
-from typing import List, Optional, Tuple
 
-from pycheckem.snapshot import load, Snapshot
+from pycheckem.snapshot import load
 
 
 # Default storage directory
@@ -34,7 +33,7 @@ def _snapshot_filename(snap):
         ts = ts[:-1]
     # Remove sub-second precision
     if "." in ts:
-        ts = ts[:ts.index(".")]
+        ts = ts[: ts.index(".")]
     # Convert to compact form
     compact_ts = ts.replace("-", "").replace(":", "") + "Z"
 
@@ -75,11 +74,13 @@ def list_snapshots(base_dir=None):
         fpath = os.path.join(hist_dir, fname)
         try:
             snap = load(fpath)
-            entries.append((
-                fname,
-                snap.metadata.timestamp,
-                snap.metadata.label,
-            ))
+            entries.append(
+                (
+                    fname,
+                    snap.metadata.timestamp,
+                    snap.metadata.label,
+                )
+            )
         except Exception:
             # Skip files that can't be loaded
             continue
@@ -94,9 +95,7 @@ def get_last_n(n, base_dir=None):
     Returns fewer than N if history has fewer entries.
     """
     hist_dir = _history_dir(base_dir)
-    json_files = sorted(
-        f for f in os.listdir(hist_dir) if f.endswith(".json")
-    )
+    json_files = sorted(f for f in os.listdir(hist_dir) if f.endswith(".json"))
     # Take the last N files
     selected = json_files[-n:] if n > 0 else []
     snapshots = []  # type: List[Snapshot]

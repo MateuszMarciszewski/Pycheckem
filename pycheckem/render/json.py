@@ -3,8 +3,6 @@ from __future__ import annotations
 import dataclasses
 import json as _json
 
-from pycheckem.types import DiffResult
-
 
 def render_json(result):
     # type: (DiffResult) -> str

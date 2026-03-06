@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import json
 import os
-from unittest.mock import patch
 
 from pycheckem.history import (
     _history_dir,
@@ -43,9 +41,7 @@ class TestHistoryDir:
     def test_creates_directory(self, tmp_path):
         hdir = _history_dir(str(tmp_path))
         assert os.path.isdir(hdir)
-        assert os.path.normpath(hdir).endswith(
-            os.path.join(".pycheckem", "history")
-        )
+        assert os.path.normpath(hdir).endswith(os.path.join(".pycheckem", "history"))
 
     def test_idempotent(self, tmp_path):
         hdir1 = _history_dir(str(tmp_path))
@@ -94,6 +90,7 @@ class TestAdd:
 
     def test_add_nonexistent_file(self, tmp_path):
         import pytest
+
         with pytest.raises(FileNotFoundError):
             add(str(tmp_path / "missing.json"), base_dir=str(tmp_path))
 
@@ -139,11 +136,13 @@ class TestListSnapshots:
 
 class TestGetLastN:
     def test_get_last_2(self, tmp_path):
-        for i, ts in enumerate([
-            "2026-01-01T10:00:00Z",
-            "2026-02-01T10:00:00Z",
-            "2026-03-01T10:00:00Z",
-        ]):
+        for i, ts in enumerate(
+            [
+                "2026-01-01T10:00:00Z",
+                "2026-02-01T10:00:00Z",
+                "2026-03-01T10:00:00Z",
+            ]
+        ):
             snap = _make_snapshot(label=f"snap{i}", timestamp=ts)
             snap_path = str(tmp_path / f"snap{i}.json")
             save(snap, snap_path)

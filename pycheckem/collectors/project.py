@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import configparser
 import os
-from typing import Optional
 
 from pycheckem.types import ProjectInfo
 
@@ -69,11 +68,7 @@ def _parse_setup_cfg(path):
     requires_python = cfg.get("options", "python_requires", fallback=None)
 
     install_requires = cfg.get("options", "install_requires", fallback="")
-    deps = [
-        dep.strip()
-        for dep in install_requires.strip().splitlines()
-        if dep.strip()
-    ]
+    deps = [dep.strip() for dep in install_requires.strip().splitlines() if dep.strip()]
 
     if not name and not version:
         return None

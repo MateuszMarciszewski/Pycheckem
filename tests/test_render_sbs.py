@@ -90,9 +90,14 @@ class TestSideBySidePackages:
 
     def test_changed_package(self):
         result = _make_result(
-            packages=PackageDiff({}, {}, {
-                "requests": VersionChange("2.28.0", "2.31.0", False, False),
-            }, 10),
+            packages=PackageDiff(
+                {},
+                {},
+                {
+                    "requests": VersionChange("2.28.0", "2.31.0", False, False),
+                },
+                10,
+            ),
             summary=DiffSummary(1, "minor", []),
         )
         output = render_side_by_side(result, width=80)
@@ -163,9 +168,14 @@ class TestSideBySidePaths:
 class TestSideBySideConfigFiles:
     def test_config_changed(self):
         result = _make_result(
-            config_files=ConfigDiff([], [], {
-                ".env": ConfigFileDiff("aaa", "bbb", ["NEW_KEY"], ["OLD_KEY"]),
-            }, 0),
+            config_files=ConfigDiff(
+                [],
+                [],
+                {
+                    ".env": ConfigFileDiff("aaa", "bbb", ["NEW_KEY"], ["OLD_KEY"]),
+                },
+                0,
+            ),
             summary=DiffSummary(1, "minor", []),
         )
         output = render_side_by_side(result, width=80)
@@ -245,9 +255,12 @@ class TestSideBySideSummary:
 class TestSbsSourceChanges:
     def test_source_change_rendered(self):
         sc = SourceChange(
-            source_a="editable", source_b="pypi",
-            url_a="file:///dev/mylib", url_b=None,
-            detail_a="file:///dev/mylib", detail_b=None,
+            source_a="editable",
+            source_b="pypi",
+            url_a="file:///dev/mylib",
+            url_b=None,
+            detail_a="file:///dev/mylib",
+            detail_b=None,
         )
         result = _make_result(
             packages=PackageDiff({}, {}, {}, 0, source_changed={"mylib": sc}),
